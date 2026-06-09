@@ -81,7 +81,8 @@ export interface WarmupStep {
   id: string;
   club: string; // Schläger / Phase, z.B. "Driver", "5 Wood", "Putten"
   detail: string; // Hinweis, z.B. "mit Halt – Pause am Top", "voll", "eigener Ball"
-  balls: number; // Range-Bälle (0 = keine, z.B. Mobility/Putten)
+  balls: number; // Range-Bälle (0 = keine, z.B. Putten)
+  minutes: number; // veranschlagte Dauer – für die Ziel-Uhrzeiten
 }
 
 /** Nächste Turnier-Tee-Time. */

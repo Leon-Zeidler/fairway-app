@@ -267,32 +267,52 @@ export const ROUTINES: Routine[] = [
   },
 ];
 
-/* ── Turnier: Warmup auf genau 60 Bälle (Putten = eigener Ball) ──── */
+/* ── Turnier: Ablauf vor dem Abschlag ───────────────────────────── */
 
-// Gesamte Range-Bälle = 60. Aufbau kurz → lang, Peak am Driver,
-// Abschluss mit Wedges. Driver & 5 Wood erst „mit Halt", dann voll.
-// Mobility & Putten verbrauchen keine Range-Bälle.
+// Reihenfolge: Aktivierung (10') → Pitching/Chipping (15') → Range-Plan
+// (60 Bälle, ~65'). Gesamt ~90 Min vor dem Abschlag.
 
-export const WARMUP: WarmupStep[] = [
-  { id: "w1", club: "Mobility / Aktivierung", detail: "Pivot-Mobility, locker werden", balls: 0 },
-  { id: "w2", club: "Wedge 56°", detail: "halbe Schwünge – Kontakt & Tempo finden", balls: 6 },
-  { id: "w3", club: "PW / 52°", detail: "Pitch-Tempo, ruhige Hände, kein Flippen", balls: 6 },
-  { id: "w4", club: "9er / 8er Eisen", detail: "voller Schwung, Boden nach dem Ball", balls: 6 },
-  { id: "w5", club: "7er / 6er Eisen", detail: "Mantra: Schulter unter Kinn, Gewicht rechts", balls: 8 },
-  { id: "w6", club: "5er Eisen / Hybrid", detail: "ruhig beschleunigen", balls: 5 },
-  { id: "w7", club: "5 Wood – mit Halt", detail: "kontrolliert, am Top kurz halten", balls: 4 },
-  { id: "w8", club: "5 Wood – voll", detail: "freier Tempo-Schwung", balls: 4 },
-  { id: "w9", club: "Driver – mit Halt", detail: "Pause am Top, Reverse-Pivot-Fokus", balls: 5 },
-  { id: "w10", club: "Driver – voll", detail: "volle Routine, Pause zwischen den Schlägen", balls: 6 },
-  { id: "w11", club: "Wedges – Abschluss", detail: "Gefühl & Tempo – nichts mehr reparieren", balls: 10 },
-  { id: "w12", club: "Putten", detail: "eigener Ball: Speed-Kontrolle & kurze Putts", balls: 0 },
+/** 10-Min-Aktivierung vor dem ersten Ball (ohne Bälle). */
+export const ACTIVATION_MINUTES = 10;
+export const ACTIVATION: string[] = [
+  "0–1:30 · Locker gehen, Arme & Schultern kreisen",
+  "1:30–3:00 · Dynamische Rumpfrotationen (Hände an den Schultern)",
+  "3:00–4:30 · World's Greatest Stretch je Seite – Hüfte öffnen",
+  "4:30–6:00 · Schulter-unter-Kinn ohne Schläger, Gewicht rechts laden",
+  "6:00–7:30 · Pivot-Schwünge mit Schläger über den Schultern, größer werden",
+  "7:30–9:00 · Halbe Übungsschwünge Wedge – Tempo spüren, Boden touchieren",
+  "9:00–10:00 · 3 tiefe Atemzüge + Mantra: Kopf hoch · Schulter unter Kinn · Gewicht rechts",
 ];
 
-/** Range-Bälle pro 60er-Bucket (Soll-Summe des Warmups). */
-export const WARMUP_BALL_TARGET = 60;
+/** 15-Min-Pitching/Chipping (Kurzspiel) vor dem Range-Teil. */
+export const PITCHING_MINUTES = 15;
+export const PITCHING: string[] = [
+  "0–3 · Chips ums Grün (56°) – Landepunkt-Kontrolle, runter & rollen",
+  "3–6 · Pitches 56° – halbe & ¾ Schwünge, ruhige Hände, kein Flippen",
+  "6–9 · 52° auf 30–50 m – Carry-Gefühl & Distanzkontrolle",
+  "9–12 · hohe weiche Pitches (58°) bzw. Bunker, falls vorhanden",
+  "12–15 · 3 Ziel-Chips an die Fahne – mit voller Pre-Shot-Routine",
+];
 
-/** Ungefähres Zeitfenster des Warmups (Min vor dem Abschlag). */
-export const WARMUP_MINUTES = 75;
+// Range-Plan: genau 60 Bälle. Aufbau kurz → lang, Peak am Driver,
+// Abschluss mit Wedges. Driver & 5 Wood erst „mit Halt", dann voll.
+// Putten verbraucht keine Range-Bälle.
+export const WARMUP: WarmupStep[] = [
+  { id: "w2", club: "Wedge 56°", detail: "halbe Schwünge – Kontakt & Tempo finden", balls: 6, minutes: 5 },
+  { id: "w3", club: "PW / 52°", detail: "Pitch-Tempo, ruhige Hände, kein Flippen", balls: 6, minutes: 5 },
+  { id: "w4", club: "9er / 8er Eisen", detail: "voller Schwung, Boden nach dem Ball", balls: 6, minutes: 5 },
+  { id: "w5", club: "7er / 6er Eisen", detail: "Mantra: Schulter unter Kinn, Gewicht rechts", balls: 8, minutes: 6 },
+  { id: "w6", club: "5er Eisen / Hybrid", detail: "ruhig beschleunigen", balls: 5, minutes: 5 },
+  { id: "w7", club: "5 Wood – mit Halt", detail: "kontrolliert, am Top kurz halten", balls: 4, minutes: 4 },
+  { id: "w8", club: "5 Wood – voll", detail: "freier Tempo-Schwung", balls: 4, minutes: 4 },
+  { id: "w9", club: "Driver – mit Halt", detail: "Pause am Top, Reverse-Pivot-Fokus", balls: 5, minutes: 5 },
+  { id: "w10", club: "Driver – voll", detail: "volle Routine, Pause zwischen den Schlägen", balls: 6, minutes: 6 },
+  { id: "w11", club: "Wedges – Abschluss", detail: "Gefühl & Tempo – nichts mehr reparieren", balls: 10, minutes: 8 },
+  { id: "w12", club: "Putten", detail: "eigener Ball: Speed-Kontrolle & kurze Putts", balls: 0, minutes: 12 },
+];
+
+/** Range-Bälle pro 60er-Bucket (Soll-Summe des Range-Plans). */
+export const WARMUP_BALL_TARGET = 60;
 
 export const WARMUP_RULE =
   "Immer mit Wedges abschließen — am Turniertag niemals etwas reparieren wollen.";
