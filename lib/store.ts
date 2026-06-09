@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { cloudGet, cloudSet } from "./cloud";
 
-/* ── localStorage-Helfer ────────────────────────────────────────── */
+/* ── localStorage-Helfer (Offline-Cache) ────────────────────────── */
 
 const NS = "fairway.";
 
@@ -21,62 +22,86 @@ function lsSet<T>(key: string, value: T) {
   window.localStorage.setItem(NS + key, JSON.stringify(value));
 }
 
-function lsRemove(key: string) {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(NS + key);
-}
-
 export function uid(prefix = "id"): string {
   return prefix + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+/* ── Kern: persistierter State (Offline-Cache + Cloud-Sync) ─────────
+ *
+ * 1. localStorage-Cache wird sofort gesetzt (kein Flackern, offline ok)
+ * 2. Cloud-Wert wird nachgeladen und überschreibt, falls vorhanden
+ * 3. Jede Änderung schreibt sofort lokal + (fire-and-forget) in die Cloud
+ * ----------------------------------------------------------------- */
+
+function usePersistedState<T>(key: string, seed: T) {
+  const [value, setValue] = useState<T>(seed);
+  const [ready, setReady] = useState(false);
+  const seedRef = useRef(seed);
+
+  useEffect(() => {
+    let cancelled = false;
+    const cached = lsGet<T>(key);
+    if (cached != null) setValue(cached);
+
+    (async () => {
+      const remote = await cloudGet<T>(key);
+      if (cancelled) return;
+      if (remote != null) {
+        setValue(remote);
+        lsSet(key, remote);
+      }
+      setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  function persist(next: T) {
+    setValue(next);
+    lsSet(key, next);
+    void cloudSet(key, next);
+  }
+
+  function reset() {
+    persist(seedRef.current);
+  }
+
+  return { value, setValue: persist, reset, ready };
 }
 
 /* ── Generische Sammlung von Objekten mit id ────────────────────── */
 
 export interface Collection<T> {
   items: T[];
-  ready: boolean; // true sobald aus localStorage geladen (verhindert Hydration-Flackern)
+  ready: boolean;
   add: (item: T) => void;
   update: (id: string, patch: Partial<T>) => void;
   remove: (id: string) => void;
   setAll: (items: T[]) => void;
-  reset: () => void; // zurück auf Seed
+  reset: () => void; // zurück auf Seed (auch in der Cloud)
 }
 
 export function useCollection<T extends { id: string }>(
   key: string,
   seed: T[]
 ): Collection<T> {
-  const [items, setItems] = useState<T[]>(seed);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const stored = lsGet<T[]>(key);
-    if (stored) setItems(stored);
-    setReady(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  function persist(next: T[]) {
-    setItems(next);
-    lsSet(key, next);
-  }
-
+  const { value, setValue, reset, ready } = usePersistedState<T[]>(key, seed);
   return {
-    items,
+    items: value,
     ready,
-    add: (item) => persist([...items, item]),
+    add: (item) => setValue([...value, item]),
     update: (id, patch) =>
-      persist(items.map((i) => (i.id === id ? { ...i, ...patch } : i))),
-    remove: (id) => persist(items.filter((i) => i.id !== id)),
-    setAll: (next) => persist(next),
-    reset: () => {
-      lsRemove(key);
-      setItems(seed);
-    },
+      setValue(value.map((i) => (i.id === id ? { ...i, ...patch } : i))),
+    remove: (id) => setValue(value.filter((i) => i.id !== id)),
+    setAll: (next) => setValue(next),
+    reset,
   };
 }
 
-/* ── Einzelnes Objekt (z.B. Profil) ─────────────────────────────── */
+/* ── Einzelnes Objekt (z.B. Profil, Tee Time) ───────────────────── */
 
 export interface ObjectStore<T> {
   value: T;
@@ -86,28 +111,12 @@ export interface ObjectStore<T> {
 }
 
 export function useObject<T extends object>(key: string, seed: T): ObjectStore<T> {
-  const [value, setValue] = useState<T>(seed);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const stored = lsGet<T>(key);
-    if (stored) setValue({ ...seed, ...stored });
-    setReady(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
+  const { value, setValue, reset, ready } = usePersistedState<T>(key, seed);
   return {
     value,
     ready,
-    set: (patch) => {
-      const next = { ...value, ...patch };
-      setValue(next);
-      lsSet(key, next);
-    },
-    reset: () => {
-      lsRemove(key);
-      setValue(seed);
-    },
+    set: (patch) => setValue({ ...value, ...patch }),
+    reset,
   };
 }
 
@@ -123,31 +132,13 @@ export interface StringList {
 }
 
 export function useStringList(key: string, seed: string[]): StringList {
-  const [items, setItems] = useState<string[]>(seed);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const stored = lsGet<string[]>(key);
-    if (stored) setItems(stored);
-    setReady(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-
-  function persist(next: string[]) {
-    setItems(next);
-    lsSet(key, next);
-  }
-
+  const { value, setValue, reset, ready } = usePersistedState<string[]>(key, seed);
   return {
-    items,
+    items: value,
     ready,
-    add: (value) => persist([...items, value]),
-    update: (index, value) =>
-      persist(items.map((v, i) => (i === index ? value : v))),
-    remove: (index) => persist(items.filter((_, i) => i !== index)),
-    reset: () => {
-      lsRemove(key);
-      setItems(seed);
-    },
+    add: (v) => setValue([...value, v]),
+    update: (index, v) => setValue(value.map((x, i) => (i === index ? v : x))),
+    remove: (index) => setValue(value.filter((_, i) => i !== index)),
+    reset,
   };
 }

@@ -1,11 +1,14 @@
 import { Session } from "./types";
-import { supabase, isCloudEnabled } from "./supabaseClient";
+import { cloudGet, cloudSet } from "./cloud";
+import { isCloudEnabled } from "./supabaseClient";
 
-// Einheitliche Datenschnittstelle. Nutzt Supabase, wenn konfiguriert,
-// sonst localStorage. So läuft die App sofort und migriert später ohne
-// Code-Änderungen in die Cloud.
+// Sessions liegen – wie alle anderen Daten – als ein JSONB-Array unter dem
+// Key "sessions" in der Cloud (Tabelle fairway_state) und gespiegelt im
+// localStorage als Offline-Cache. Gleiche API wie zuvor, damit die Seiten
+// unverändert bleiben.
 
-const LS_KEY = "fairway.sessions";
+const KEY = "sessions";
+const LS_KEY = "fairway." + KEY;
 
 function lsRead(): Session[] {
   if (typeof window === "undefined") return [];
@@ -21,36 +24,35 @@ function lsWrite(sessions: Session[]) {
   window.localStorage.setItem(LS_KEY, JSON.stringify(sessions));
 }
 
-export async function getSessions(): Promise<Session[]> {
-  if (isCloudEnabled && supabase) {
-    const { data, error } = await supabase
-      .from("sessions")
-      .select("*")
-      .order("date", { ascending: false });
-    if (error) throw error;
-    return (data as Session[]) || [];
+async function readAll(): Promise<Session[]> {
+  if (isCloudEnabled) {
+    const remote = await cloudGet<Session[]>(KEY);
+    if (remote != null) {
+      lsWrite(remote);
+      return remote;
+    }
   }
-  return lsRead().sort((a, b) => b.date.localeCompare(a.date));
+  return lsRead();
+}
+
+async function writeAll(sessions: Session[]): Promise<void> {
+  lsWrite(sessions);
+  await cloudSet(KEY, sessions);
+}
+
+export async function getSessions(): Promise<Session[]> {
+  const all = await readAll();
+  return [...all].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function addSession(s: Session): Promise<void> {
-  if (isCloudEnabled && supabase) {
-    const { error } = await supabase.from("sessions").insert(s);
-    if (error) throw error;
-    return;
-  }
-  const all = lsRead();
-  all.push(s);
-  lsWrite(all);
+  const all = await readAll();
+  await writeAll([...all, s]);
 }
 
 export async function deleteSession(id: string): Promise<void> {
-  if (isCloudEnabled && supabase) {
-    const { error } = await supabase.from("sessions").delete().eq("id", id);
-    if (error) throw error;
-    return;
-  }
-  lsWrite(lsRead().filter((s) => s.id !== id));
+  const all = await readAll();
+  await writeAll(all.filter((s) => s.id !== id));
 }
 
 // Aktueller Streak in Tagen: aufeinanderfolgende Tage mit mind. einer Session.
