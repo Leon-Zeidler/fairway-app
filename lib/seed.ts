@@ -119,13 +119,48 @@ export const EQUIPMENT: EquipItem[] = [
 /* ── Drills: Reverse-Pivot-Fokus ────────────────────────────────── */
 
 export const DRILLS: Drill[] = [
-  { id: "rp1", name: "Kopf höher im Setup", detail: "10× ohne Ball — Kinn weg vom Brustbein" },
-  { id: "rp2", name: "Linke Schulter hinter den Ball", detail: "15× langsam" },
-  { id: "rp3", name: "Gewicht in rechten Oberschenkel laden", detail: "10× am Top innehalten" },
-  { id: "rp4", name: "Schulter-unter-Kinn Drill", detail: "15 Wiederholungen" },
-  { id: "rp5", name: "Rechtes Bein als Anker", detail: "10 langsame Schwünge" },
-  { id: "rp6", name: "Headcover unter linkem Fuß", detail: "10 Bälle 7 Eisen" },
-  { id: "rp7", name: "Video-Check von vorne", detail: "5–10 Schwünge filmen" },
+  {
+    id: "rp1",
+    name: "Kopf höher im Setup",
+    detail:
+      "10× ohne Ball. Kinn weg vom Brustbein, Hals lang, Blick über die Nase auf den Ball. Gefühl: Brust offen, Platz zwischen Kinn und Brust. ✗ Fehler: Kopf sinkt beim Schwung wieder ein → linke Schulter blockiert sofort.",
+  },
+  {
+    id: "rp2",
+    name: "Linke Schulter hinter den Ball",
+    detail:
+      "15× langsam. Im Rückschwung dreht die linke Schulter unter das Kinn und HINTER den Ball — nicht nach unten zum Ball. Gefühl: Rücken zeigt Richtung Ziel. ✗ Fehler: Schulter kippt runter statt zu drehen.",
+  },
+  {
+    id: "rp3",
+    name: "Gewicht in rechten Oberschenkel laden",
+    detail:
+      "10× am Top 2 Sek. halten. Druck in rechte Ferse/Innenseite spüren, rechtes Knie bleibt stabil (kippt nicht weg). ✗ Fehler: Gewicht wandert ins linke Bein → genau der Reverse Pivot.",
+  },
+  {
+    id: "rp4",
+    name: "Schulter-unter-Kinn Drill",
+    detail:
+      "15 Wdh. Kinn bleibt OBEN — die linke Schulter kommt zum Kinn, nicht das Kinn zur Schulter. So bleibt die Wirbelsäulenneigung erhalten und die Drehung frei.",
+  },
+  {
+    id: "rp5",
+    name: "Rechtes Bein als Anker",
+    detail:
+      "10 langsame Schwünge. Rechtes Bein hält den Winkel vom Setup bis zum Top — wie gegen eine Wand auf der Fuß-Innenseite laden. Gibt eine stabile Achse zum Laden.",
+  },
+  {
+    id: "rp6",
+    name: "Headcover unter linkem Fuß",
+    detail:
+      "10 Bälle, 7 Eisen. Headcover unter den Ballen des linken Fußes — das zwingt das Gewicht im Rückschwung nach rechts. Sauberer, mittiger Treffer = der Drill sitzt.",
+  },
+  {
+    id: "rp7",
+    name: "Video-Check von vorne",
+    detail:
+      "5–10 Schwünge face-on filmen. Check: Bleibt der Kopf hinter dem Ball? Lädt das Gewicht rechts? Kippt nichts zum Ziel? Vergleiche langsamen Drill-Schwung mit vollem Tempo.",
+  },
 ];
 
 /* ── Routinen: Mobility (5 Tage), Golf, Gym (4) ─────────────────── */
@@ -138,10 +173,10 @@ export const ROUTINES: Routine[] = [
     title: "Tag 1 — Rotation & Wirbelsäule",
     focus: "Beweglichkeit für die Drehung",
     steps: [
-      "Cat-Cow — 10 Wdh.",
-      "Thoracic Rotations (Vierfüßler) — 8/Seite",
-      "Open Book (Seitenlage) — 8/Seite",
-      "Im Sitzen Wirbelsäule drehen — 30 s/Seite",
+      "Cat-Cow — 10 Wdh., langsam jeden Wirbel einzeln bewegen",
+      "Thoracic Rotations (Vierfüßler) — 8/Seite, Hand an den Hinterkopf, aus der Brust drehen (nicht aus der Lende)",
+      "Open Book (Seitenlage) — 8/Seite, unteres Knie bleibt am Boden, Brust öffnet nach hinten",
+      "Wirbelsäule im Sitzen drehen — 30 s/Seite, erst lang machen, dann sanft tiefer drehen",
     ],
   },
   {
@@ -150,10 +185,10 @@ export const ROUTINES: Routine[] = [
     title: "Tag 2 — Hüfte & Gesäß",
     focus: "Hüftmobilität & Stabilität",
     steps: [
-      "90/90 Hip Switch — 10 Wdh.",
-      "Pigeon Stretch — 45 s/Seite",
-      "Hüftbeuger-Ausfallschritt — 45 s/Seite",
-      "Glute Bridge — 15 Wdh.",
+      "90/90 Hip Switch — 10 Wdh., Oberkörper aufrecht, kontrolliert wechseln",
+      "Pigeon Stretch — 45 s/Seite, Hüfte quadratisch zum Boden, ruhig atmen",
+      "Hüftbeuger-Ausfallschritt — 45 s/Seite, Becken kippen & Po anspannen (kein Hohlkreuz)",
+      "Glute Bridge — 15 Wdh., oben 1 Sek. Po fest, Rippen unten lassen",
     ],
   },
   {
@@ -162,10 +197,10 @@ export const ROUTINES: Routine[] = [
     title: "Tag 3 — Schultern & Brust",
     focus: "Freie Schultern für den Turn",
     steps: [
-      "Türrahmen-Brustdehnung — 30 s",
-      "Schulter-Dislocates mit Band — 10 Wdh.",
-      "Cross-Body Shoulder Stretch — 30 s/Seite",
-      "Wall Slides — 12 Wdh.",
+      "Türrahmen-Brustdehnung — 30 s, Ellbogen auf Schulterhöhe, sanft vorlehnen",
+      "Schulter-Dislocates mit Band — 10 Wdh., Arme gestreckt, langsam über den Kopf",
+      "Cross-Body Shoulder Stretch — 30 s/Seite, Schulter unten halten (nicht hochziehen)",
+      "Wall Slides — 12 Wdh., unterer Rücken an der Wand, Handrücken bleiben an der Wand",
     ],
   },
   {
@@ -174,10 +209,10 @@ export const ROUTINES: Routine[] = [
     title: "Tag 4 — Ganzkörper Recovery",
     focus: "Lockern & regenerieren",
     steps: [
-      "Foam Roll Rücken & Beine — 5 Min",
-      "Child's Pose — 60 s",
-      "Hamstring-Dehnung — 45 s/Seite",
-      "World's Greatest Stretch — 6/Seite",
+      "Foam Roll Rücken & Beine — 5 Min, langsam, empfindliche Punkte 20 s halten",
+      "Child's Pose — 60 s, Arme lang nach vorn, tief in den Rücken atmen",
+      "Hamstring-Dehnung — 45 s/Seite, Rücken gerade, aus der Hüfte beugen",
+      "World's Greatest Stretch — 6/Seite, kontrolliert, Brust zum Himmel öffnen",
     ],
   },
   {
@@ -187,12 +222,12 @@ export const ROUTINES: Routine[] = [
     focus: "Aktueller Fokus für den Reverse-Pivot-Fix",
     current: true,
     steps: [
-      "Stehende Rumpfrotation — 10/Seite",
-      "Schulterdrehung an der Wand — 10 Wdh.",
-      "Geladene Drehung mit Schritt zurück — 8/Seite",
-      "Nacken/Kinn anheben (Mobilität) — 10 Wdh.",
-      "Führende Schulter unter das Kinn — 10 Wdh.",
-      "Rechte-Hüfte-Hinge geladen halten — 8 Wdh.",
+      "Stehende Rumpfrotation — 10/Seite, Hüfte ruhig, nur der Oberkörper dreht (wie der Backswing)",
+      "Schulterdrehung an der Wand — 10 Wdh., Rücken zur Wand, beim Drehen mit der Schulter berühren",
+      "Geladene Drehung mit Schritt zurück — 8/Seite, bewusst aufs hintere Bein laden (Gegenmittel zum Reverse Pivot)",
+      "Nacken/Kinn anheben — 10 Wdh., Kinn vom Brustbein weg, Hals lang machen (genau dein Setup-Fix)",
+      "Führende Schulter unter das Kinn — 10 Wdh., Schulter kommt zum Kinn, Kinn bleibt oben",
+      "Rechte-Hüfte-Hinge geladen halten — 8 Wdh., am Top 2 Sek. Druck in die rechte Hüfte halten",
     ],
   },
   // Golf
@@ -203,13 +238,13 @@ export const ROUTINES: Routine[] = [
     focus: "Hauptfokus — Kopf hoch, Schulter unter Kinn, Gewicht rechts laden",
     current: true,
     steps: [
-      "Kopf höher im Setup — 10× ohne Ball",
-      "Linke Schulter hinter den Ball — 15× langsam",
-      "Gewicht in rechten Oberschenkel laden — 10× am Top halten",
-      "Schulter-unter-Kinn — 15 Wdh.",
-      "Rechtes Bein als Anker — 10 langsame Schwünge",
-      "Headcover unter linkem Fuß — 10 Bälle 7 Eisen",
-      "Video-Check von vorne — 5–10 Schwünge",
+      "Kopf höher im Setup — 10× ohne Ball. Kinn weg vom Brustbein, Hals lang halten",
+      "Linke Schulter hinter den Ball — 15× langsam, Schulter unter & hinter den Ball (nicht runter)",
+      "Gewicht rechts laden — 10× am Top 2 Sek. halten, Druck in rechte Ferse/Innenseite",
+      "Schulter unter Kinn — 15 Wdh., Kinn bleibt oben, Wirbelsäulenneigung erhalten",
+      "Rechtes Bein als Anker — 10 langsame Schwünge, Winkel halten",
+      "Headcover unter linkem Fuß — 10 Bälle 7 Eisen, zwingt Gewicht nach rechts",
+      "Video-Check von vorne — 5–10 Schwünge: Kopf hinter Ball? Gewicht rechts?",
     ],
   },
   // Gym
@@ -219,11 +254,11 @@ export const ROUTINES: Routine[] = [
     title: "Beine — Squat Power",
     focus: "Stabiles Fundament & Power",
     steps: [
-      "Back Squat — 4×6",
-      "Bulgarian Split Squat — 3×8/Seite",
-      "Romanian Deadlift — 3×8",
-      "Jump Squats — 3×8",
-      "Wadenheben — 3×15",
+      "Back Squat — 4×6, mind. parallel, Knie über die Füße, Rumpf fest",
+      "Bulgarian Split Squat — 3×8/Seite, Balance & einbeinige Kraft",
+      "Romanian Deadlift — 3×8, Hüfte zurück, Rücken gerade, Hamstrings spüren",
+      "Jump Squats — 3×8, explosiv hoch, weich landen (Power für Schwung-Speed)",
+      "Wadenheben — 3×15, volle Bewegung, oben halten",
     ],
   },
   {
@@ -232,11 +267,11 @@ export const ROUTINES: Routine[] = [
     title: "Rumpf — Rotation",
     focus: "Rotationskraft für den Schwung",
     steps: [
-      "Kabel/Band Woodchop — 3×10/Seite",
-      "Pallof Press — 3×12/Seite",
-      "Russian Twist — 3×20",
-      "Plank mit Rotation — 3×10",
-      "Med-Ball Rotational Throw — 3×8/Seite",
+      "Kabel/Band Woodchop — 3×10/Seite, aus der Hüfte rotieren, Arme nur führen",
+      "Pallof Press — 3×12/Seite, Anti-Rotation, Rumpf bleibt stabil (schützt den Rücken)",
+      "Russian Twist — 3×20, kontrolliert, die Brust dreht (nicht nur die Arme)",
+      "Plank mit Rotation — 3×10, Hüfte stabil halten",
+      "Med-Ball Rotational Throw — 3×8/Seite, explosiv (übersetzt direkt in Schwung-Speed)",
     ],
   },
   {
@@ -245,11 +280,11 @@ export const ROUTINES: Routine[] = [
     title: "Oberkörper",
     focus: "Zug & Druck im Gleichgewicht",
     steps: [
-      "Klimmzüge — 4×6",
-      "Bankdrücken (KH) — 3×8",
-      "Rudern — 3×10",
-      "Schulterdrücken — 3×10",
-      "Face Pulls — 3×15",
+      "Klimmzüge — 4×6, volle Streckung unten, Schulterblätter führen",
+      "Bankdrücken (KH) — 3×8, kontrolliert ab- und auf",
+      "Rudern — 3×10, Schulterblätter zusammenziehen (Haltung & Zugkraft)",
+      "Schulterdrücken — 3×10, Rippen unten, kein Hohlkreuz",
+      "Face Pulls — 3×15, für Schultergesundheit & gegen Rundrücken",
     ],
   },
   {
@@ -258,11 +293,11 @@ export const ROUTINES: Routine[] = [
     title: "Ganzkörper",
     focus: "Athletik & Kraftausdauer",
     steps: [
-      "Kreuzheben — 4×5",
-      "Power Clean — 4×3",
-      "Liegestütze — 3×12",
-      "Ausfallschritte — 3×10/Seite",
-      "Farmer's Carry — 3×30 m",
+      "Kreuzheben — 4×5, neutraler Rücken, aus den Beinen drücken",
+      "Power Clean — 4×3, explosiv, Technik vor Gewicht",
+      "Liegestütze — 3×12, Körper als gerades Brett",
+      "Ausfallschritte — 3×10/Seite, Knie über dem Fuß",
+      "Farmer's Carry — 3×30 m, Griffkraft & Rumpf, aufrecht & ruhig gehen",
     ],
   },
 ];
@@ -275,40 +310,117 @@ export const ROUTINES: Routine[] = [
 /** 10-Min-Aktivierung vor dem ersten Ball (ohne Bälle). */
 export const ACTIVATION_MINUTES = 10;
 export const ACTIVATION: string[] = [
-  "0–1:30 · Locker gehen, Arme & Schultern kreisen",
-  "1:30–3:00 · Dynamische Rumpfrotationen (Hände an den Schultern)",
-  "3:00–4:30 · World's Greatest Stretch je Seite – Hüfte öffnen",
-  "4:30–6:00 · Schulter-unter-Kinn ohne Schläger, Gewicht rechts laden",
-  "6:00–7:30 · Pivot-Schwünge mit Schläger über den Schultern, größer werden",
-  "7:30–9:00 · Halbe Übungsschwünge Wedge – Tempo spüren, Boden touchieren",
-  "9:00–10:00 · 3 tiefe Atemzüge + Mantra: Kopf hoch · Schulter unter Kinn · Gewicht rechts",
+  "0:00–1:30 · Locker gehen + Arme kreisen — Puls leicht hoch, Schultern lösen. Warm werden, nicht müde.",
+  "1:30–3:00 · Rumpfrotationen (Hände an den Schultern) — aus der Mitte drehen, Hüfte ruhig. Bereitet die Schulterdrehung vor.",
+  "3:00–4:30 · World's Greatest Stretch je Seite — tiefe Ausfallschritt-Rotation, öffnet Hüfte & Brust für den vollen Turn.",
+  "4:30–6:00 · Schulter-unter-Kinn ohne Schläger — Kinn oben, bewusst Gewicht rechts laden. Spür den Reverse-Pivot-Fix.",
+  "6:00–7:30 · Pivot-Schwünge, Schläger über den Schultern — langsam größer werden, Wirbelsäulenneigung halten.",
+  "7:30–9:00 · Halbe Übungsschwünge Wedge — Tempo spüren, Boden NACH dem Ball touchieren. Noch kein echter Ball.",
+  "9:00–10:00 · 3 tiefe Atemzüge + Mantra. Ruhig werden, EIN Gedanke: Gewicht rechts laden.",
 ];
 
 /** 15-Min-Pitching/Chipping (Kurzspiel) vor dem Range-Teil. */
 export const PITCHING_MINUTES = 15;
 export const PITCHING: string[] = [
-  "0–3 · Chips ums Grün (56°) – Landepunkt-Kontrolle, runter & rollen",
-  "3–6 · Pitches 56° – halbe & ¾ Schwünge, ruhige Hände, kein Flippen",
-  "6–9 · 52° auf 30–50 m – Carry-Gefühl & Distanzkontrolle",
-  "9–12 · hohe weiche Pitches (58°) bzw. Bunker, falls vorhanden",
-  "12–15 · 3 Ziel-Chips an die Fahne – mit voller Pre-Shot-Routine",
+  "0–3 · Chips ums Grün (56°) — Hände vor dem Ball, Handgelenke ruhig. Landepunkt wählen, Ball läuft aus wie ein Putt.",
+  "3–6 · Pitches 56° halbe & ¾ — Brust dreht durch, kein Flippen mit den Händen (sonst weniger Spin). Durch den Ball beschleunigen.",
+  "6–9 · 52° auf 30–50 m — gleiches Tempo, Distanz über die Schwunglänge steuern. Carry-Gefühl abspeichern.",
+  "9–12 · hohe weiche Pitches (58°) bzw. Bunker — Face offen, weich landen. Im Bunker: Sand vor dem Ball nehmen, durchschwingen.",
+  "12–15 · 3 Ziel-Chips an die Fahne — volle Pre-Shot-Routine wie im Turnier. Mit einem Erfolgserlebnis aufhören.",
 ];
 
 // Range-Plan: genau 60 Bälle. Aufbau kurz → lang, Peak am Driver,
 // Abschluss mit Wedges. Driver & 5 Wood erst „mit Halt", dann voll.
 // Putten verbraucht keine Range-Bälle.
 export const WARMUP: WarmupStep[] = [
-  { id: "w2", club: "Wedge 56°", detail: "halbe Schwünge – Kontakt & Tempo finden", balls: 6, minutes: 5 },
-  { id: "w3", club: "PW / 52°", detail: "Pitch-Tempo, ruhige Hände, kein Flippen", balls: 6, minutes: 5 },
-  { id: "w4", club: "9er / 8er Eisen", detail: "voller Schwung, Boden nach dem Ball", balls: 6, minutes: 5 },
-  { id: "w5", club: "7er / 6er Eisen", detail: "Mantra: Schulter unter Kinn, Gewicht rechts", balls: 8, minutes: 6 },
-  { id: "w6", club: "5er Eisen / Hybrid", detail: "ruhig beschleunigen", balls: 5, minutes: 5 },
-  { id: "w7", club: "5 Wood – mit Halt", detail: "kontrolliert, am Top kurz halten", balls: 4, minutes: 4 },
-  { id: "w8", club: "5 Wood – voll", detail: "freier Tempo-Schwung", balls: 4, minutes: 4 },
-  { id: "w9", club: "Driver – mit Halt", detail: "Pause am Top, Reverse-Pivot-Fokus", balls: 5, minutes: 5 },
-  { id: "w10", club: "Driver – voll", detail: "volle Routine, Pause zwischen den Schlägen", balls: 6, minutes: 6 },
-  { id: "w11", club: "Wedges – Abschluss", detail: "Gefühl & Tempo – nichts mehr reparieren", balls: 10, minutes: 8 },
-  { id: "w12", club: "Putten", detail: "eigener Ball: Speed-Kontrolle & kurze Putts", balls: 0, minutes: 12 },
+  {
+    id: "w2",
+    club: "Wedge 56°",
+    detail:
+      "Halbe Schwünge, nur Kontakt & Tempo wecken — nicht auf Weite. Arme fallen lassen, Hände ruhig, Boden NACH dem Ball.",
+    balls: 6,
+    minutes: 5,
+  },
+  {
+    id: "w3",
+    club: "PW / 52°",
+    detail:
+      "Gleichmäßiges Pitch-Tempo. Ruhige Hände, kein Flippen — sonst verlierst du Spin. Die Brust dreht durch.",
+    balls: 6,
+    minutes: 5,
+  },
+  {
+    id: "w4",
+    club: "9er / 8er Eisen",
+    detail:
+      "Erster voller Schwung. Brush the grass AFTER the ball — abwärts treffen, Divot nach dem Ball. Tempo vor Power.",
+    balls: 6,
+    minutes: 5,
+  },
+  {
+    id: "w5",
+    club: "7er / 6er Eisen",
+    detail:
+      "Jetzt das Mantra aktiv anwenden: Schulter unter Kinn, Gewicht rechts laden. Mittiger Treffer wichtiger als Weite.",
+    balls: 8,
+    minutes: 6,
+  },
+  {
+    id: "w6",
+    club: "5er Eisen / Hybrid",
+    detail:
+      "Flacherer Schwung, ruhig beschleunigen — nicht zuschlagen. Der Loft macht die Höhe, du machst nur das Tempo.",
+    balls: 5,
+    minutes: 5,
+  },
+  {
+    id: "w7",
+    club: "5 Wood – mit Halt",
+    detail:
+      "Am Top kurz halten (reiner Drill). Lädt das Gewicht rechts und verhindert den Reverse Pivot. Tempo ~80 %.",
+    balls: 4,
+    minutes: 4,
+  },
+  {
+    id: "w8",
+    club: "5 Wood – voll",
+    detail:
+      "Jetzt freier Tempo-Schwung mit dem Gefühl vom Halt-Drill. Vom Boden weg sweepen, nicht draufschlagen.",
+    balls: 4,
+    minutes: 4,
+  },
+  {
+    id: "w9",
+    club: "Driver – mit Halt",
+    detail:
+      "Pause am Top, Gewicht bewusst rechts spüren — genau dein Reverse-Pivot-Fix. Ball weit vorne, Schulter unter Kinn.",
+    balls: 5,
+    minutes: 5,
+  },
+  {
+    id: "w10",
+    club: "Driver – voll",
+    detail:
+      "Volle Pre-Shot-Routine + Pause zwischen den Schlägen wie auf dem Platz. Tempo so, dass das Face zugeht (nicht zu schnell). Tempo > Power.",
+    balls: 6,
+    minutes: 6,
+  },
+  {
+    id: "w11",
+    club: "Wedges – Abschluss",
+    detail:
+      "Runterkommen, Gefühl & Tempo. Nichts mehr reparieren — vertrau dem, was da ist. Mit gutem Gefühl zur Tee gehen.",
+    balls: 10,
+    minutes: 8,
+  },
+  {
+    id: "w12",
+    club: "Putten",
+    detail:
+      "Eigener Ball. Erst Speed-Kontrolle (lange Putts an den Lochrand), dann 6–8 kurze sichere Putts. Letzte Aktion: ein gelochter Putt.",
+    balls: 0,
+    minutes: 12,
+  },
 ];
 
 /** Range-Bälle pro 60er-Bucket (Soll-Summe des Range-Plans). */
@@ -320,20 +432,21 @@ export const WARMUP_RULE =
 /* ── Turnier: Mental-Check & Strategie ──────────────────────────── */
 
 export const MENTAL_CHECK: string[] = [
-  "Spielform: wahrscheinlich Stableford.",
-  "Mit den Stärken arbeiten — kurze Eisen, 120 m ist die Stärke.",
-  "Bei Schwierigkeiten: aufnehmen und nächstes Loch.",
-  "Driver konservativ; bei engen Löchern Eisen vom Tee in Erwägung ziehen.",
+  "Spielform wahrscheinlich Stableford: pro Loch max. Punkte holen. Ein Blow-up-Loch kostet nur 0 Punkte — nicht die ganze Runde.",
+  "Mit den Stärken spielen: kurze Eisen & ~120 m sind dein Geld. Annäherungen bewusst auf diese Wohlfühl-Distanz legen.",
+  "Bei Schwierigkeiten: aufnehmen, Loch abhaken, nächstes Tee frisch starten. Nachärgern macht kein Loch besser.",
+  "Vom Tee clever: Driver nur, wenn Platz da ist. Bei engen Löchern Eisen/Holz für sicheres Fairway — Bogey-frei schlägt Held-oder-Null.",
+  "Eine Sache pro Schwung: das Mantra. Keine Technik-Liste im Kopf — Gewicht rechts, fertig.",
 ];
 
 /* ── Swing-Insights ─────────────────────────────────────────────── */
 
 export const INSIGHTS: string[] = [
-  "Pausieren am Top ist ein Drill, kein Schwunggedanke — sonst Pull/Hook.",
-  "Beim Pitching: ruhige Hände, kein Flippen — sonst weniger Spin.",
-  "Tempo wichtiger als Power — „lass den Schläger fallen“.",
-  "Brush the grass AFTER the ball für saubere Eisen-Treffer.",
-  "Mantra: Kopf hoch · Schulter unter Kinn · Gewicht rechts laden.",
+  "Pausieren am Top ist ein DRILL, kein Schwunggedanke auf dem Platz — bewusstes Pausieren im Spiel führt zu Pull/Hook.",
+  "Beim Pitching ruhige Hände, kein Flippen — die Brustdrehung macht den Schlag, nicht die Handgelenke. Mehr Spin, sauberer Kontakt.",
+  "Tempo schlägt Power: „lass den Schläger fallen“. Dein Speed (100+ mph) ist da — Kontrolle bringt die Schläge, nicht mehr Kraft.",
+  "Brush the grass AFTER the ball — Eisen abwärts treffen, Divot nach dem Ball. Das erzeugt sauberen Kontakt und Spin.",
+  "Reverse-Pivot-Wurzel: Kopf zu tief im Setup. Kinn hoch → linke Schulter rotiert frei → Gewicht lädt rechts. Daran hängt alles.",
 ];
 
 /* ── Nächste Schritte (Priorität) ───────────────────────────────── */
