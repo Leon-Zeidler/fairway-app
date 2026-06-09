@@ -198,8 +198,11 @@ export default function Dashboard() {
               </div>
             ))
           )}
-          <Link href="/journal" className="btn">
-            + Session loggen
+          <Link href="/journal" className="btn btn-cta">
+            Session loggen
+            <span className="btn-icon">
+              <Icon name="chevron" size={16} />
+            </span>
           </Link>
         </div>
 
