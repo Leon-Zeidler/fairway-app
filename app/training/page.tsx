@@ -14,6 +14,29 @@ import { DRILLS, ROUTINES } from "@/lib/seed";
 import { EditableText, Accordion, ResetButton } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 
+/** Übungsnamen aus einem Schritt-Text extrahieren (Teil vor —, · oder (). */
+function exerciseName(text: string): string {
+  const head = text.split(/[—·(]/)[0].replace(/^[\d:.\s–-]+/, "").trim();
+  return head || text;
+}
+
+const SUFFIX: Record<RoutineGroup, string> = {
+  mobility: "stretch dehnübung",
+  golf: "golf drill",
+  gym: "übung exercise",
+};
+
+/** Link zur Bildersuche der Übung (keine eingebetteten Fremdbilder). */
+function DemoLink({ query }: { query: string }) {
+  const url =
+    "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(query);
+  return (
+    <a className="demo-link" href={url} target="_blank" rel="noopener noreferrer">
+      <Icon name="image" size={13} /> Bild ansehen
+    </a>
+  );
+}
+
 type Tab = "drills" | "routinen";
 
 export default function Training() {
@@ -118,6 +141,7 @@ function DrillsTab({ drills }: { drills: Collection<Drill> }) {
                     onChange={(v) => drills.update(d.id, { detail: v })}
                   />
                 </div>
+                <DemoLink query={`${d.name} golf drill`} />
               </span>
               <button
                 className="del"
@@ -257,6 +281,8 @@ function RoutineSteps({
                 )
               }
             />
+            <br />
+            <DemoLink query={`${exerciseName(step)} ${SUFFIX[routine.group]}`} />
           </span>
           <button
             className="del"

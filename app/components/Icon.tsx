@@ -8,10 +8,12 @@ export type IconName =
   | "bag"
   | "trophy"
   | "journal"
+  | "calendar"
   | "chevron"
   | "plus"
   | "reset"
-  | "target";
+  | "target"
+  | "image";
 
 const PATHS: Record<IconName, JSX.Element> = {
   // Haus / Heute
@@ -54,6 +56,21 @@ const PATHS: Record<IconName, JSX.Element> = {
       <path d="M6 3h11a2 2 0 0 1 2 2v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
       <path d="M4 17h15" />
       <path d="M9 7h6M9 10.5h6" />
+    </>
+  ),
+  // Kalender / Woche
+  calendar: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2.5" />
+      <path d="M3 9.5h18M8 3v4M16 3v4" />
+    </>
+  ),
+  // Bild
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <circle cx="8.5" cy="9.5" r="1.6" />
+      <path d="m4 17 5-4.5L14 17l3-2.5 4 3.5" />
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,

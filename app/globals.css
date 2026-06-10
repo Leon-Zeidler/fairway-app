@@ -1136,6 +1136,188 @@ textarea {
   padding-left: 4px;
 }
 
+/* ── Woche · Tracker ────────────────────────────────────────────── */
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.wn-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--inner-hi), 0 1px 2px rgba(20, 35, 25, 0.05),
+    0 0 0 1px var(--hairline);
+  transition: transform 0.35s var(--ease);
+}
+.wn-btn:active {
+  transform: scale(0.9);
+}
+.wn-label {
+  text-align: center;
+}
+.wn-main {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.wn-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-track {
+  display: grid;
+  grid-template-columns: 46px repeat(5, 1fr);
+  gap: 7px;
+  align-items: center;
+}
+.gt-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--faint);
+  text-align: center;
+  padding-bottom: 4px;
+}
+.gt-day {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+.gt-dow {
+  font-size: 13px;
+  font-weight: 700;
+}
+.gt-date {
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.gt-day.today .gt-dow {
+  color: var(--accent);
+}
+.gt-cell {
+  height: 40px;
+  border: 1.5px solid transparent;
+  border-radius: 11px;
+  background: #f1f1ec;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  transition: transform 0.3s var(--ease), background 0.25s var(--ease-soft);
+}
+.gt-cell:active {
+  transform: scale(0.88);
+}
+.gt-cell.planned:not(.done) {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: none;
+}
+.gt-cell.today:not(.done):not(.planned) {
+  background: #eceae3;
+}
+.gt-cell.done {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 14px -8px var(--accent-glow);
+}
+.gt-cell.done::after {
+  content: "✓";
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+}
+.legend-item {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.legend-item b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.prog-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--hairline);
+}
+.prog-row:first-of-type {
+  border-top: none;
+}
+.prog-label {
+  flex: none;
+  width: 110px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.prog-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #eceae3;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  transition: width 0.5s var(--ease);
+}
+.prog-val {
+  flex: none;
+  width: 42px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Demo-/Bild-Link an Routine-Schritten */
+.demo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.demo-link:active {
+  opacity: 0.6;
+}
+
 /* ── Bottom-Nav (Floating Glass Island) ─────────────────────────── */
 
 .nav {
@@ -1145,9 +1327,9 @@ textarea {
   transform: translateX(-50%);
   display: flex;
   justify-content: space-between;
-  gap: 2px;
-  width: min(calc(100% - 24px), 460px);
-  padding: 8px;
+  gap: 1px;
+  width: min(calc(100% - 20px), 500px);
+  padding: 7px 6px;
   background: rgba(252, 252, 250, 0.72);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -1162,19 +1344,19 @@ textarea {
   justify-content: center;
   gap: 3px;
   flex: 1;
-  padding: 8px 4px;
+  padding: 7px 2px;
   border-radius: 999px;
   text-decoration: none;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
   transition: color 0.3s var(--ease-soft), background 0.4s var(--ease),
     transform 0.4s var(--ease);
 }
 .nav a svg {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
   transition: transform 0.4s var(--ease);
 }
 .nav a.active {
