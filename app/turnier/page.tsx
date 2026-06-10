@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { EquipItem, TeeTime, WarmupStep } from "@/lib/types";
-import { useCollection, useObject, useStringList, uid } from "@/lib/store";
+import { EquipItem, TeeTime } from "@/lib/types";
+import { useCollection, useObject } from "@/lib/store";
 import {
   WARMUP,
   WARMUP_RULE,
@@ -16,7 +16,6 @@ import {
   TEE_TIME,
   EQUIPMENT,
 } from "@/lib/seed";
-import { EditableText, EditableList, ResetButton } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 
 /** Uhrzeit (HH:MM) minus Minuten zurückrechnen. */
@@ -30,22 +29,25 @@ function clockMinus(time: string, minutesBefore: number): string | null {
   return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
+// Range-Plan-Zeiten (statisch aus dem kuratierten Plan).
+const ballMinutes = WARMUP.reduce((s, w) => s + w.minutes, 0);
+const pitchOffset = ballMinutes + PITCHING_MINUTES;
+const totalMinutes = pitchOffset + ACTIVATION_MINUTES;
+const startBefore: number[] = (() => {
+  const arr: number[] = [];
+  let acc = 0;
+  for (let i = WARMUP.length - 1; i >= 0; i--) {
+    acc += WARMUP[i].minutes;
+    arr[i] = acc;
+  }
+  return arr;
+})();
+const totalBalls = WARMUP.reduce((s, w) => s + w.balls, 0);
+
 export default function Turnier() {
   const tee = useObject<TeeTime>("teeTime", TEE_TIME);
-  const activation = useStringList("activation", ACTIVATION);
-  const pitching = useStringList("pitching", PITCHING);
-  const warmup = useCollection<WarmupStep>("warmupPlan", WARMUP);
-  const mental = useStringList("mentalCheck", MENTAL_CHECK);
-  const insights = useStringList("insights", INSIGHTS);
   const equip = useCollection<EquipItem>("equipment2", EQUIPMENT);
   const [done, setDone] = useState<Set<string>>(new Set());
-
-  // Schläger, die laut Bag noch nicht da sind → Routine-Schritte markieren.
-  const unavailableTags = equip.items
-    .filter((e) => e.available === false && e.routineTag)
-    .map((e) => e.routineTag as string);
-  const missingIn = (text: string) =>
-    unavailableTags.filter((tag) => text.includes(tag));
 
   function toggle(id: string) {
     setDone((prev) => {
@@ -59,37 +61,36 @@ export default function Turnier() {
   const hasTime = /^\d{1,2}:\d{2}$/.test(tee.value.time.trim());
   const t = tee.value.time;
 
-  // Range-Plan-Dauer und Offsets (Minuten vor dem Abschlag).
-  const ballMinutes = warmup.items.reduce((s, w) => s + (Number(w.minutes) || 0), 0);
-  const pitchOffset = ballMinutes + PITCHING_MINUTES; // Start Pitching
-  const totalMinutes = pitchOffset + ACTIVATION_MINUTES; // Start Aktivierung
-
-  // Pro Range-Schritt: Minuten vor Abschlag beim Start (Suffix-Summe).
-  const startBefore: number[] = [];
-  let acc = 0;
-  for (let i = warmup.items.length - 1; i >= 0; i--) {
-    acc += Number(warmup.items[i].minutes) || 0;
-    startBefore[i] = acc;
-  }
-
-  const totalBalls = warmup.items.reduce((s, w) => s + (Number(w.balls) || 0), 0);
-  const onTarget = totalBalls === WARMUP_BALL_TARGET;
+  // Fehlende Schläger laut Bag.
+  const unavailableTags = equip.items
+    .filter((e) => e.available === false && e.routineTag)
+    .map((e) => e.routineTag as string);
+  const missingIn = (text: string) =>
+    unavailableTags.filter((tag) => text.includes(tag));
 
   function windowLabel(fromBefore: number, toBefore: number, mins: number) {
     if (!hasTime) return `${mins} Min`;
     return `${clockMinus(t, fromBefore)} – ${clockMinus(t, toBefore)} Uhr · ${mins} Min`;
   }
 
+  const pitchingMissing = unavailableTags.filter((tag) =>
+    PITCHING.some((s) => s.includes(tag))
+  );
+
   return (
     <>
       <header className="topbar">
         <h1>Turnier</h1>
-        <div className="tag">Ablauf, Warmup & Strategie</div>
+        <div className="tag">Dein kompletter Ablauf vor dem Abschlag</div>
       </header>
 
       <div className="container">
+        {/* Tee Time */}
         <div className="card">
           <h2>Nächstes Turnier</h2>
+          <div className="sub">
+            Tee Time eintragen — alle Zeiten unten rechnen sich automatisch.
+          </div>
           <label className="field">Turnier</label>
           <input
             type="text"
@@ -97,7 +98,7 @@ export default function Turnier() {
             placeholder="z.B. Clubmeisterschaft"
             onChange={(e) => tee.set({ name: e.target.value })}
           />
-          <div className="tee-grid" style={{ marginTop: 12 }}>
+          <div className="tee-grid" style={{ marginTop: 10 }}>
             <div>
               <label className="field">Datum</label>
               <input
@@ -119,7 +120,7 @@ export default function Turnier() {
           {hasTime && (
             <div className="tee-banner">
               <span>
-                <div className="lbl">Aufwärmen ab</div>
+                <div className="lbl">Ankommen & los</div>
                 <div className="val">{clockMinus(t, totalMinutes)} Uhr</div>
               </span>
               <span style={{ textAlign: "right" }}>
@@ -128,155 +129,148 @@ export default function Turnier() {
               </span>
             </div>
           )}
-
-          {(tee.value.name || tee.value.date || tee.value.time) && (
-            <div className="row-actions">
-              <button className="btn-outline muted" type="button" onClick={tee.reset}>
-                <Icon name="reset" size={15} /> Tee Time leeren
-              </button>
-            </div>
-          )}
         </div>
 
         {/* 1 · Aktivierung */}
         <div className="card">
-          <h2>1 · Aktivierung · 10 Min</h2>
+          <h2>
+            <span className="step-num">1</span> Aktivierung · 10 Min
+          </h2>
           <div className="sub">
-            {windowLabel(totalMinutes, pitchOffset, ACTIVATION_MINUTES)} — vor dem ersten Ball.
+            {windowLabel(totalMinutes, pitchOffset, ACTIVATION_MINUTES)} — Körper
+            wecken, bevor der erste Ball fliegt. Einfach von oben nach unten.
           </div>
-          <EditableList list={activation} addLabel="Schritt" />
-        </div>
-
-        {/* 2 · Pitching / Chipping */}
-        <div className="card">
-          <h2>2 · Pitching & Chipping · 15 Min</h2>
-          <div className="sub">
-            {windowLabel(pitchOffset, ballMinutes, PITCHING_MINUTES)} — Kurzspiel & Gefühl.
-          </div>
-          {(() => {
-            const miss = unavailableTags.filter((tag) =>
-              pitching.items.some((s) => s.includes(tag))
-            );
-            return miss.length ? (
-              <div className="warn-box">
-                Noch nicht im Bag: {miss.join(", ")} — solange mit PW spielen.
+          {ACTIVATION.map((s, i) => {
+            const id = `a${i}`;
+            const on = done.has(id);
+            return (
+              <div className={`drill ${on ? "done" : ""}`} key={id}>
+                <input type="checkbox" checked={on} onChange={() => toggle(id)} />
+                <span style={{ flex: 1 }}>
+                  <span className="d-detail" style={{ marginTop: 0 }}>
+                    {s}
+                  </span>
+                </span>
               </div>
-            ) : null;
-          })()}
-          <EditableList list={pitching} addLabel="Schritt" />
+            );
+          })}
         </div>
 
-        {/* 3 · Range-Plan */}
+        {/* 2 · Pitching */}
         <div className="card">
-          <h2>3 · Range · 60-Ball-Plan</h2>
+          <h2>
+            <span className="step-num">2</span> Kurzspiel · 15 Min
+          </h2>
           <div className="sub">
-            {hasTime
-              ? "Ziel-Uhrzeiten aus deiner Tee Time. Bälle-Zahl antippen zum Anpassen. Putten mit eigenem Ball."
-              : "Trag oben die Tee Time ein, dann erscheinen die Ziel-Uhrzeiten. Putten mit eigenem Ball."}
+            {windowLabel(pitchOffset, ballMinutes, PITCHING_MINUTES)} — Gefühl
+            fürs Grün holen. Eigene Bälle, nicht der Bucket.
           </div>
-          <div className="timeline">
-            {warmup.items.map((w, i) => {
-              const checked = done.has(w.id);
-              const zero = (Number(w.balls) || 0) === 0;
-              const clock = hasTime
-                ? clockMinus(t, startBefore[i])
-                : `−${startBefore[i]}′`;
-              const rowMissing = missingIn(`${w.club} ${w.detail}`);
-              return (
-                <div className={`warm-row ${checked ? "checked" : ""}`} key={w.id}>
-                  <input
-                    type="checkbox"
-                    className="warm-check"
-                    checked={checked}
-                    onChange={() => toggle(w.id)}
-                  />
-                  <span className={`balls ${zero ? "zero" : ""}`}>
-                    <EditableText
-                      value={zero ? "–" : String(w.balls)}
-                      onChange={(v) =>
-                        warmup.update(w.id, { balls: Number(v.replace(/\D/g, "")) || 0 })
-                      }
-                    />
+          {pitchingMissing.length > 0 && (
+            <div className="warn-box">
+              Noch nicht im Bag: {pitchingMissing.join(", ")} — diese Schläge
+              solange mit dem PW spielen.
+            </div>
+          )}
+          {PITCHING.map((s, i) => {
+            const id = `p${i}`;
+            const on = done.has(id);
+            return (
+              <div className={`drill ${on ? "done" : ""}`} key={id}>
+                <input type="checkbox" checked={on} onChange={() => toggle(id)} />
+                <span style={{ flex: 1 }}>
+                  <span className="d-detail" style={{ marginTop: 0 }}>
+                    {s}
                   </span>
-                  <span className="lbl">
-                    <span className="warm-club">
-                      <EditableText
-                        value={w.club}
-                        onChange={(v) => warmup.update(w.id, { club: v })}
-                      />
-                      {rowMissing.length > 0 && (
-                        <span className="tag-missing">{rowMissing.join(", ")} fehlt</span>
-                      )}
-                    </span>
-                    <div className="warm-detail">
-                      <EditableText
-                        value={w.detail}
-                        multiline
-                        onChange={(v) => warmup.update(w.id, { detail: v })}
-                      />
-                    </div>
-                  </span>
-                  <span className="clock">{clock}</span>
-                  <button
-                    className="del"
-                    type="button"
-                    aria-label="Löschen"
-                    onClick={() => warmup.remove(w.id)}
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
-          <div className={`warm-total ${onTarget ? "" : "off"}`}>
+        {/* 3 · Range */}
+        <div className="card">
+          <h2>
+            <span className="step-num">3</span> Range · genau {WARMUP_BALL_TARGET}{" "}
+            Bälle
+          </h2>
+          <div className="sub">
+            Ein 60er-Bucket reicht exakt. Kurz → lang, Abschluss mit Wedges.
+            {hasTime
+              ? " Die Uhrzeit zeigt, wann du bei welchem Schläger sein solltest."
+              : " Trag oben die Tee Time ein für die Uhrzeiten."}
+          </div>
+          {WARMUP.map((w, i) => {
+            const on = done.has(w.id);
+            const zero = w.balls === 0;
+            const clock = hasTime
+              ? clockMinus(t, startBefore[i])
+              : `−${startBefore[i]}′`;
+            const rowMissing = missingIn(`${w.club} ${w.detail}`);
+            return (
+              <div className={`warm-row ${on ? "checked" : ""}`} key={w.id}>
+                <input
+                  type="checkbox"
+                  className="warm-check"
+                  checked={on}
+                  onChange={() => toggle(w.id)}
+                />
+                <span className={`balls ${zero ? "zero" : ""}`}>
+                  {zero ? "–" : w.balls}
+                </span>
+                <span className="lbl">
+                  <span className="warm-club">
+                    {w.club}
+                    {rowMissing.length > 0 && (
+                      <span className="tag-missing">
+                        {rowMissing.join(", ")} fehlt
+                      </span>
+                    )}
+                  </span>
+                  <div className="warm-detail">{w.detail}</div>
+                </span>
+                <span className="clock">{clock}</span>
+              </div>
+            );
+          })}
+
+          <div className="warm-total">
             <span className="n">{totalBalls} Bälle</span>
-            <span className="hint">
-              {onTarget
-                ? "= 1 Bucket · Putten eigener Ball"
-                : `Ziel ${WARMUP_BALL_TARGET} (${
-                    totalBalls > WARMUP_BALL_TARGET ? "+" : ""
-                  }${totalBalls - WARMUP_BALL_TARGET})`}
-            </span>
+            <span className="hint">= 1 Bucket · Putten mit eigenem Ball</span>
           </div>
 
           <div className="note-box">{WARMUP_RULE}</div>
           <div className="row-actions">
             <button
-              className="btn-outline"
-              type="button"
-              onClick={() =>
-                warmup.add({
-                  id: uid("w"),
-                  club: "Neuer Schritt",
-                  detail: "Hinweis…",
-                  balls: 0,
-                  minutes: 5,
-                })
-              }
-            >
-              <Icon name="plus" size={15} /> Schritt
-            </button>
-            <button
               className="btn-outline muted"
               type="button"
               onClick={() => setDone(new Set())}
             >
-              <Icon name="reset" size={15} /> Haken zurück
+              <Icon name="reset" size={15} /> Alle Haken zurücksetzen
             </button>
-            <ResetButton onReset={warmup.reset} />
           </div>
         </div>
 
+        {/* Strategie */}
         <div className="card">
-          <h2>Mental-Check & Strategie</h2>
-          <EditableList list={mental} addLabel="Punkt" />
+          <h2>Auf der Runde · Strategie</h2>
+          <div className="sub">Vor der Runde einmal lesen — mehr nicht.</div>
+          {MENTAL_CHECK.map((s) => (
+            <div className="list-row" key={s}>
+              <Icon name="target" size={13} className="bullet" />
+              <span className="body">{s}</span>
+            </div>
+          ))}
         </div>
 
+        {/* Insights */}
         <div className="card">
-          <h2>Swing-Insights</h2>
-          <EditableList list={insights} addLabel="Insight" />
+          <h2>Merksätze</h2>
+          {INSIGHTS.map((s) => (
+            <div className="list-row" key={s}>
+              <Icon name="target" size={13} className="bullet" />
+              <span className="body">{s}</span>
+            </div>
+          ))}
         </div>
       </div>
     </>

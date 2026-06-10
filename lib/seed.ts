@@ -14,6 +14,17 @@ import {
 
 export const MANTRA = "Kopf hoch · Schulter unter Kinn · Gewicht rechts laden";
 
+/** Aktueller Trainingsfokus — wird auf "Heute" und im Training angezeigt. */
+export const FOCUS = {
+  title: "Swing Path — von innen schwingen",
+  why: "Die 114 kam von „über den Ball“: getoppte Driver, dünne Eisen, kein Vertrauen. Der Pfad von innen fixt alle drei.",
+  cues: [
+    "Unterkörper startet abwärts — Hüfte zuerst, Arme folgen",
+    "Haltung halten — Po bleibt hinten, nicht aufrichten",
+    "Committen — voller Schwung, Tempo statt Kraft",
+  ],
+};
+
 export const TEE_TIME: TeeTime = { name: "", date: "", time: "" };
 
 /** Bucket-Größen am Heimatplatz (Bälle pro Bucket). */

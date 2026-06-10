@@ -3,44 +3,7 @@
 import { useState } from "react";
 import { useObject } from "@/lib/store";
 import Icon from "@/app/components/Icon";
-
-/* ── Aktivitäten & empfohlener Wochenplan ───────────────────────── */
-
-const ACTIVITIES = [
-  { key: "mobility", label: "Mobility", short: "Mob" },
-  { key: "technik", label: "Technik · Range", short: "Tec" },
-  { key: "kurzspiel", label: "Kurzspiel", short: "Kurz" },
-  { key: "gym", label: "Gym", short: "Gym" },
-  { key: "platz", label: "Platz", short: "Platz" },
-];
-
-// Empfehlung pro Wochentag (0 = Mo … 6 = So) — nur als Ziel-Markierung.
-const PLAN: Record<string, number[]> = {
-  mobility: [0, 1, 2, 3, 4, 5, 6], // täglich
-  technik: [0, 2, 4], // Mo · Mi · Fr (Swing Path / Topping)
-  kurzspiel: [2, 5], // Mi · Sa
-  gym: [0, 3], // Mo · Do
-  platz: [5, 6], // Sa · So
-};
-
-const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-
-/* ── Datum-Helfer (lokal, ohne UTC-Verschiebung) ────────────────── */
-
-function isoLocal(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const da = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-}
-
-function mondayOf(weekOffset: number): Date {
-  const d = new Date();
-  const dow = (d.getDay() + 6) % 7; // 0 = Mo
-  d.setDate(d.getDate() - dow + weekOffset * 7);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+import { ACTIVITIES, PLAN, WEEKDAYS, isoLocal, mondayOf } from "@/lib/plan";
 
 type WeekLog = Record<string, string[]>;
 

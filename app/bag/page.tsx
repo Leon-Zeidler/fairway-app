@@ -3,11 +3,7 @@
 import { Club, EquipItem } from "@/lib/types";
 import { useCollection, uid } from "@/lib/store";
 import { CLUBS, EQUIPMENT } from "@/lib/seed";
-import {
-  EditableText,
-  StatusButton,
-  ResetButton,
-} from "@/app/components/ui";
+import { EditableText, StatusButton } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 
 export default function Bag() {
@@ -19,13 +15,16 @@ export default function Bag() {
     <>
       <header className="topbar">
         <h1>Bag</h1>
-        <div className="tag">Distanzen & Equipment</div>
+        <div className="tag">Deine Distanzen & dein Equipment</div>
       </header>
 
       <div className="container">
         <div className="card">
           <h2>Distanzen</h2>
-          <div className="sub">Wert antippen zum Ändern.</div>
+          <div className="sub">
+            Deine Carry-Distanzen — Wert antippen und anpassen, wenn sich was
+            ändert.
+          </div>
           {clubs.items.map((c) => (
             <div className="kv-row" key={c.id}>
               <span className="k">
@@ -34,7 +33,10 @@ export default function Bag() {
                   onChange={(v) => clubs.update(c.id, { name: v })}
                 />
               </span>
-              <span className="v" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <span
+                className="v"
+                style={{ display: "flex", gap: 10, alignItems: "center" }}
+              >
                 <EditableText
                   value={c.distance}
                   onChange={(v) => clubs.update(c.id, { distance: v })}
@@ -43,6 +45,14 @@ export default function Bag() {
                   className="del"
                   type="button"
                   aria-label="Löschen"
+                  style={{
+                    border: "none",
+                    background: "none",
+                    color: "var(--faint)",
+                    fontSize: 18,
+                    cursor: "pointer",
+                    padding: "0 2px",
+                  }}
                   onClick={() => clubs.remove(c.id)}
                 >
                   ×
@@ -60,15 +70,14 @@ export default function Bag() {
             >
               <Icon name="plus" size={15} /> Schläger
             </button>
-            <ResetButton onReset={clubs.reset} />
           </div>
         </div>
 
         <div className="card">
-          <h2>Equipment-Status</h2>
+          <h2>Equipment</h2>
           <div className="sub">
-            Status antippen zum Wechseln. „Im Bag / Noch nicht da" steuert, ob
-            die Turnier-Routine den Schläger nutzt.
+            Status antippen zum Wechseln. „Im Bag / Noch nicht da" steuert
+            automatisch, was die Turnier-Routine dir empfiehlt.
           </div>
           {equip.items.map((e) => {
             const notHere = e.available === false;
@@ -79,31 +88,15 @@ export default function Bag() {
               >
                 <div className="equip-head">
                   <div style={{ flex: 1 }}>
-                    <div className="equip-cat">
-                      <EditableText
-                        value={e.category}
-                        onChange={(v) => equip.update(e.id, { category: v })}
-                      />
-                    </div>
-                    <div className="equip-name">
-                      <EditableText
-                        value={e.name}
-                        onChange={(v) => equip.update(e.id, { name: v })}
-                      />
-                    </div>
+                    <div className="equip-cat">{e.category}</div>
+                    <div className="equip-name">{e.name}</div>
                   </div>
                   <StatusButton
                     status={e.status}
                     onChange={(s) => equip.update(e.id, { status: s })}
                   />
                 </div>
-                <div className="equip-note">
-                  <EditableText
-                    value={e.note}
-                    multiline
-                    onChange={(v) => equip.update(e.id, { note: v })}
-                  />
-                </div>
+                <div className="equip-note">{e.note}</div>
                 <div className="equip-actions">
                   <button
                     type="button"
@@ -112,36 +105,10 @@ export default function Bag() {
                   >
                     {notHere ? "Noch nicht da" : "Im Bag"}
                   </button>
-                  <button
-                    className="btn-ghost"
-                    type="button"
-                    onClick={() => equip.remove(e.id)}
-                  >
-                    löschen
-                  </button>
                 </div>
               </div>
             );
           })}
-          <div className="row-actions">
-            <button
-              className="btn-outline"
-              type="button"
-              onClick={() =>
-                equip.add({
-                  id: uid("e"),
-                  category: "Kategorie",
-                  name: "Neues Equipment",
-                  status: "watch",
-                  note: "Notiz…",
-                  available: true,
-                })
-              }
-            >
-              <Icon name="plus" size={15} /> Eintrag
-            </button>
-            <ResetButton onReset={equip.reset} />
-          </div>
         </div>
       </div>
     </>
