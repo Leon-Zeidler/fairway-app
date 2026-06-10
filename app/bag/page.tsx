@@ -12,7 +12,8 @@ import Icon from "@/app/components/Icon";
 
 export default function Bag() {
   const clubs = useCollection<Club>("clubs", CLUBS);
-  const equip = useCollection<EquipItem>("equipment", EQUIPMENT);
+  // Key v2: EquipItem um available/routineTag erweitert (Routine-Sync).
+  const equip = useCollection<EquipItem>("equipment2", EQUIPMENT);
 
   return (
     <>
@@ -65,46 +66,63 @@ export default function Bag() {
 
         <div className="card">
           <h2>Equipment-Status</h2>
-          <div className="sub">Status antippen zum Wechseln (Passt → Beobachten → Handlungsbedarf).</div>
-          {equip.items.map((e) => (
-            <div className="equip-item" key={e.id}>
-              <div className="equip-head">
-                <div style={{ flex: 1 }}>
-                  <div className="equip-cat">
-                    <EditableText
-                      value={e.category}
-                      onChange={(v) => equip.update(e.id, { category: v })}
-                    />
-                  </div>
-                  <div className="equip-name">
-                    <EditableText
-                      value={e.name}
-                      onChange={(v) => equip.update(e.id, { name: v })}
-                    />
-                  </div>
-                </div>
-                <StatusButton
-                  status={e.status}
-                  onChange={(s) => equip.update(e.id, { status: s })}
-                />
-              </div>
-              <div className="equip-note">
-                <EditableText
-                  value={e.note}
-                  multiline
-                  onChange={(v) => equip.update(e.id, { note: v })}
-                />
-              </div>
-              <button
-                className="btn-ghost"
-                type="button"
-                style={{ marginTop: 8 }}
-                onClick={() => equip.remove(e.id)}
+          <div className="sub">
+            Status antippen zum Wechseln. „Im Bag / Noch nicht da" steuert, ob
+            die Turnier-Routine den Schläger nutzt.
+          </div>
+          {equip.items.map((e) => {
+            const notHere = e.available === false;
+            return (
+              <div
+                className={`equip-item ${notHere ? "unavailable" : ""}`}
+                key={e.id}
               >
-                löschen
-              </button>
-            </div>
-          ))}
+                <div className="equip-head">
+                  <div style={{ flex: 1 }}>
+                    <div className="equip-cat">
+                      <EditableText
+                        value={e.category}
+                        onChange={(v) => equip.update(e.id, { category: v })}
+                      />
+                    </div>
+                    <div className="equip-name">
+                      <EditableText
+                        value={e.name}
+                        onChange={(v) => equip.update(e.id, { name: v })}
+                      />
+                    </div>
+                  </div>
+                  <StatusButton
+                    status={e.status}
+                    onChange={(s) => equip.update(e.id, { status: s })}
+                  />
+                </div>
+                <div className="equip-note">
+                  <EditableText
+                    value={e.note}
+                    multiline
+                    onChange={(v) => equip.update(e.id, { note: v })}
+                  />
+                </div>
+                <div className="equip-actions">
+                  <button
+                    type="button"
+                    className={`avail-toggle ${notHere ? "off" : "on"}`}
+                    onClick={() => equip.update(e.id, { available: notHere })}
+                  >
+                    {notHere ? "Noch nicht da" : "Im Bag"}
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    type="button"
+                    onClick={() => equip.remove(e.id)}
+                  >
+                    löschen
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           <div className="row-actions">
             <button
               className="btn-outline"
@@ -116,6 +134,7 @@ export default function Bag() {
                   name: "Neues Equipment",
                   status: "watch",
                   note: "Notiz…",
+                  available: true,
                 })
               }
             >

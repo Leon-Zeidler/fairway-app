@@ -49,6 +49,8 @@ export interface EquipItem {
   name: string; // konkretes Modell
   status: EquipStatus;
   note: string;
+  available?: boolean; // im Bag verfügbar? (undefined = ja). false = noch nicht da
+  routineTag?: string; // Kürzel zum Abgleich mit der Turnier-Routine, z.B. "52°"
 }
 
 /** Ein einzelner Drill. */

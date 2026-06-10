@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TeeTime, WarmupStep } from "@/lib/types";
+import { EquipItem, TeeTime, WarmupStep } from "@/lib/types";
 import { useCollection, useObject, useStringList, uid } from "@/lib/store";
 import {
   WARMUP,
@@ -14,6 +14,7 @@ import {
   MENTAL_CHECK,
   INSIGHTS,
   TEE_TIME,
+  EQUIPMENT,
 } from "@/lib/seed";
 import { EditableText, EditableList, ResetButton } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
@@ -36,7 +37,15 @@ export default function Turnier() {
   const warmup = useCollection<WarmupStep>("warmupPlan", WARMUP);
   const mental = useStringList("mentalCheck", MENTAL_CHECK);
   const insights = useStringList("insights", INSIGHTS);
+  const equip = useCollection<EquipItem>("equipment2", EQUIPMENT);
   const [done, setDone] = useState<Set<string>>(new Set());
+
+  // Schläger, die laut Bag noch nicht da sind → Routine-Schritte markieren.
+  const unavailableTags = equip.items
+    .filter((e) => e.available === false && e.routineTag)
+    .map((e) => e.routineTag as string);
+  const missingIn = (text: string) =>
+    unavailableTags.filter((tag) => text.includes(tag));
 
   function toggle(id: string) {
     setDone((prev) => {
@@ -144,6 +153,16 @@ export default function Turnier() {
           <div className="sub">
             {windowLabel(pitchOffset, ballMinutes, PITCHING_MINUTES)} — Kurzspiel & Gefühl.
           </div>
+          {(() => {
+            const miss = unavailableTags.filter((tag) =>
+              pitching.items.some((s) => s.includes(tag))
+            );
+            return miss.length ? (
+              <div className="warn-box">
+                Noch nicht im Bag: {miss.join(", ")} — solange mit PW spielen.
+              </div>
+            ) : null;
+          })()}
           <EditableList list={pitching} addLabel="Schritt" />
         </div>
 
@@ -162,6 +181,7 @@ export default function Turnier() {
               const clock = hasTime
                 ? clockMinus(t, startBefore[i])
                 : `−${startBefore[i]}′`;
+              const rowMissing = missingIn(`${w.club} ${w.detail}`);
               return (
                 <div className={`warm-row ${checked ? "checked" : ""}`} key={w.id}>
                   <input
@@ -184,6 +204,9 @@ export default function Turnier() {
                         value={w.club}
                         onChange={(v) => warmup.update(w.id, { club: v })}
                       />
+                      {rowMissing.length > 0 && (
+                        <span className="tag-missing">{rowMissing.join(", ")} fehlt</span>
+                      )}
                     </span>
                     <div className="warm-detail">
                       <EditableText

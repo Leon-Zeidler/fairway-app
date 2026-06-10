@@ -56,6 +56,8 @@ export const EQUIPMENT: EquipItem[] = [
     category: "Driver",
     name: "Ping G410",
     status: "issue",
+    available: true,
+    routineTag: "Driver",
     note: "Regular-Schaft viel zu weich für 100+ mph → Face geht auf → Slice. Lösung: Stiff-Schaft. Empfehlung: Project X HZRDUS Smoke Black RDX 60g Stiff oder Mitsubishi Tensei AV Blue 65g Stiff. Kopf ist gut — nur Schaft tauschen. Fitting 50–100 €. Höchste Equipment-Prio nach dem Turnier.",
   },
   {
@@ -63,6 +65,8 @@ export const EQUIPMENT: EquipItem[] = [
     category: "5 Wood",
     name: "5 Wood",
     status: "watch",
+    available: true,
+    routineTag: "5 Wood",
     note: "Funktioniert, könnte ein Fitting brauchen.",
   },
   {
@@ -84,13 +88,17 @@ export const EQUIPMENT: EquipItem[] = [
     category: "Wedge 52°",
     name: "Cleveland RTZ Black Satin",
     status: "good",
-    note: "Gerade bestellt (in Lieferung). Mid Grind, Nippon Modus 3 Tour 120 Stiff, +0.25\" Length, 1° Upright, Tour Velvet Midsize. 186 €. Schließt die Lücke PW → 56°.",
+    available: false,
+    routineTag: "52°",
+    note: "NOCH NICHT DA (bestellt, in Lieferung). Mid Grind, Nippon Modus 3 Tour 120 Stiff, +0.25\" Length, 1° Upright, Tour Velvet Midsize. 186 €. Schließt die Lücke PW → 56°. Bis dahin im Warmup PW statt 52° nutzen.",
   },
   {
     id: "e-56",
     category: "Wedge 56°",
     name: "TaylorMade Hi-Toe",
     status: "issue",
+    available: true,
+    routineTag: "56°",
     note: "Passt nicht ins System. Plan: durch Cleveland RTZ ersetzen, wenn möglich (nach 5–10 Runden mit dem 52°).",
   },
   {
@@ -98,6 +106,8 @@ export const EQUIPMENT: EquipItem[] = [
     category: "Wedge 58°",
     name: "Cobra",
     status: "issue",
+    available: true,
+    routineTag: "58°",
     note: "Passt nicht ins System, fast gleiche Distanz wie 56°. Plan: durch Cleveland RTZ ersetzen.",
   },
   {

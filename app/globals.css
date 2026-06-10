@@ -756,6 +756,87 @@ textarea {
   line-height: 1.6;
   margin-top: 9px;
 }
+.equip-item.unavailable .equip-name {
+  color: var(--faint);
+}
+.equip-item.unavailable {
+  opacity: 0.78;
+}
+.equip-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.avail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 11px;
+  border: none;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--inner-hi), 0 1px 2px rgba(20, 35, 25, 0.05),
+    0 0 0 1px var(--hairline);
+  transition: transform 0.4s var(--ease);
+}
+.avail-toggle:active {
+  transform: scale(0.94);
+}
+.avail-toggle::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.avail-toggle.on {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.avail-toggle.on::before {
+  background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 18%, transparent);
+}
+.avail-toggle.off {
+  background: var(--surface);
+  color: var(--issue);
+}
+.avail-toggle.off::before {
+  background: var(--issue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--issue) 18%, transparent);
+}
+
+/* Routine-Sync: fehlender Schläger */
+.tag-missing {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--issue);
+  background: color-mix(in srgb, var(--issue) 12%, transparent);
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.warn-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: color-mix(in srgb, var(--issue) 9%, transparent);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--issue);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
 
 /* ── Accordion (Routinen) ───────────────────────────────────────── */
 
