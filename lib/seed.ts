@@ -242,11 +242,40 @@ export const ROUTINES: Routine[] = [
   },
   // Golf
   {
+    id: "golf2",
+    group: "golf",
+    title: "Swing Path — Driver & Eisen",
+    focus: "Neuer Hauptfokus (nach Turnier 114): raus aus Over-the-top, von innen schwingen",
+    current: true,
+    steps: [
+      "Headcover außerhalb/vor dem Ball — triff den Ball, NICHT das Headcover. Zwingt den Schläger von innen (gegen Over-the-top).",
+      "Gate-Drill mit 2 Tees — schmales Tor um den Ball, Schlägerkopf läuft von innen sauber durch.",
+      "Pump-Drill — 3× am Top in den Slot fallen lassen (Arme runter, Schläger flacher), dann erst schlagen.",
+      "Unterkörper startet abwärts — Gewicht/linke Hüfte zuerst, Arme folgen. Nicht von oben mit den Schultern ziehen.",
+      "70 % Tempo, in Sequenz — Gefühl: von innen Richtung „1 Uhr“ durch den Ball.",
+      "Alignment-Stick auf der Ziellinie — nach jedem Schlag Pfad & Divot-Richtung checken.",
+    ],
+  },
+  {
+    id: "golf3",
+    group: "golf",
+    title: "Driver — Topping & Haltung",
+    focus: "Sauberer, selbstbewusster Treffer: Haltung halten, nicht aufrichten",
+    current: true,
+    steps: [
+      "Haltung halten — Po bleibt „an der Wand“, Brust über dem Ball bis nach dem Treffer (kein Aufrichten / Early Extension).",
+      "Kopf hinter dem Ball — wie beim Reverse-Pivot-Fix; nicht zum Ziel kippen.",
+      "Füße-zusammen-Schwünge — 10 Bälle, nur Balance & mittiger Kontakt. Heilt Topping schnell.",
+      "Tee höher, Ball vorne, leicht AUFWÄRTS treffen — dem Driver nicht „nach oben helfen“.",
+      "Committen — volle Routine, voller Schwung. Zaghaft/Decel = Topping. Tempo vor Kraft.",
+      "Auf dem Platz: bei Unsicherheit 5-Holz / langes Eisen vom Tee, bis der Driver wieder sitzt.",
+    ],
+  },
+  {
     id: "golf1",
     group: "golf",
     title: "Reverse Pivot beheben",
-    focus: "Hauptfokus — Kopf hoch, Schulter unter Kinn, Gewicht rechts laden",
-    current: true,
+    focus: "Basis — Kopf hoch, Schulter unter Kinn, Gewicht rechts laden (füttert Haltung & Path)",
     steps: [
       "Kopf höher im Setup — 10× ohne Ball. Kinn weg vom Brustbein, Hals lang halten",
       "Linke Schulter hinter den Ball — 15× langsam, Schulter unter & hinter den Ball (nicht runter)",
@@ -462,10 +491,11 @@ export const INSIGHTS: string[] = [
 /* ── Nächste Schritte (Priorität) ───────────────────────────────── */
 
 export const NEXT_STEPS: string[] = [
-  "Reverse Pivot konsequent trainieren (jetzt aktiv, viele Bälle).",
-  "Turnier mit TP5x spielen — Performance dokumentieren.",
-  "Driver-Schaft-Fitting & Tausch (höchste Equipment-Prio nach Turnier).",
-  "Nach 5–10 Runden mit 52° Cleveland: auch 56° als Cleveland RTZ kaufen.",
-  "Mittelfristig: Putter-Entscheidung (LAB testen).",
-  "Langfristig: 9 Wood / 4 Iron-Lücke schließen.",
+  "Turnier-Auswertung 114: Hauptbaustellen = Swing Path (Driver & Eisen) + Topping/Haltung.",
+  "Swing Path: Headcover- & Gate-Drill — von innen schwingen statt über den Ball.",
+  "Topping: Haltung halten (kein Aufrichten), Füße-zusammen-Drill für mittigen Kontakt.",
+  "Tägliche Mobility: Hüfte & Brustwirbelsäule — Basis gegen Aufrichten/Over-the-top.",
+  "Auf dem Platz: Driver nur wenn sicher, sonst 5-Holz/Eisen vom Tee (Score vor Held).",
+  "Path & Topping mit Coach/Video gegenchecken.",
+  "Offen: Driver-Schaft-Fitting (Stiff), 52° kommt noch, später Putter & 9 Wood.",
 ];
