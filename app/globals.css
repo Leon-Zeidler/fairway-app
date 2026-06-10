@@ -1128,84 +1128,44 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
-.grid-track {
-  display: grid;
-  grid-template-columns: 44px repeat(5, 1fr);
-  gap: 6px;
-  align-items: center;
-}
-.gt-head {
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--faint);
-  text-align: center;
-  padding-bottom: 3px;
-}
-.gt-day {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-.gt-dow {
-  font-size: 13px;
-  font-weight: 800;
-}
-.gt-date {
-  font-size: 10.5px;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-}
-.gt-day.today .gt-dow {
-  color: var(--green);
-}
-.gt-cell {
-  height: 38px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
-  cursor: pointer;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.25s var(--ease), background 0.2s;
-}
-.gt-cell:active {
-  transform: scale(0.88);
-}
-.gt-cell.planned:not(.done) {
-  background: var(--surface);
-  border-color: var(--line-strong);
-  border-style: dashed;
-}
-.gt-cell.done {
-  background: var(--green);
+/* Tages-Agenda */
+.day-card.today {
   border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green), var(--shadow);
 }
-.gt-cell.done::after {
-  content: "✓";
-  color: #fff;
-  font-size: 14px;
-  font-weight: 800;
+.day-card.past:not(.today) {
+  opacity: 0.82;
 }
-
-.legend {
+.day-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 2px;
 }
-.legend-item {
-  font-size: 11.5px;
-  color: var(--muted);
-}
-.legend-item b {
-  color: var(--ink);
+.day-title {
+  font-size: 15px;
   font-weight: 800;
+  letter-spacing: -0.015em;
+}
+.tag-today {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--green);
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: 1px;
+}
+.day-state {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--faint);
+  white-space: nowrap;
 }
 
 .prog-row {

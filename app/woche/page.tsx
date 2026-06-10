@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useObject } from "@/lib/store";
 import Icon from "@/app/components/Icon";
-import { ACTIVITIES, PLAN, WEEKDAYS, isoLocal, mondayOf } from "@/lib/plan";
+import {
+  ACTIVITIES,
+  PLAN,
+  WEEKDAYS,
+  isoLocal,
+  mondayOf,
+  dayTasks,
+} from "@/lib/plan";
 
 type WeekLog = Record<string, string[]>;
 
@@ -31,13 +39,14 @@ export default function Woche() {
     log.set({ [dateIso]: next });
   }
 
-  // Wochensumme pro Aktivität.
+  // Wochensumme pro Aktivität (für die Fortschrittsbalken).
   const counts = ACTIVITIES.map((a) => ({
     ...a,
     done: days.filter((d) => done(isoLocal(d), a.key)).length,
     plan: PLAN[a.key]?.length ?? 0,
   }));
   const totalDone = counts.reduce((s, c) => s + c.done, 0);
+  const totalPlan = counts.reduce((s, c) => s + c.plan, 0);
 
   const rangeLabel = `${days[0].getDate()}.${days[0].getMonth() + 1}. – ${days[6].getDate()}.${days[6].getMonth() + 1}.`;
 
@@ -45,10 +54,11 @@ export default function Woche() {
     <>
       <header className="topbar">
         <h1>Woche</h1>
-        <div className="tag">Planen, loggen & tracken</div>
+        <div className="tag">Dein Plan — Tag für Tag, einfach abhaken</div>
       </header>
 
       <div className="container">
+        {/* Wochen-Navigation + Fortschritt */}
         <div className="card">
           <div className="week-nav">
             <button
@@ -61,9 +71,15 @@ export default function Woche() {
             </button>
             <div className="wn-label">
               <div className="wn-main">
-                {offset === 0 ? "Diese Woche" : rangeLabel}
+                {offset === 0
+                  ? "Diese Woche"
+                  : offset === -1
+                    ? "Letzte Woche"
+                    : offset === 1
+                      ? "Nächste Woche"
+                      : rangeLabel}
               </div>
-              {offset === 0 ? <div className="wn-sub">{rangeLabel}</div> : null}
+              <div className="wn-sub">{rangeLabel}</div>
             </div>
             <button
               type="button"
@@ -75,62 +91,8 @@ export default function Woche() {
             </button>
           </div>
 
-          <div className="grid-track">
-            {/* Kopfzeile */}
-            <div className="gt-corner" />
-            {ACTIVITIES.map((a) => (
-              <div className="gt-head" key={a.key}>
-                {a.short}
-              </div>
-            ))}
-
-            {/* Tageszeilen */}
-            {days.map((d, i) => {
-              const iso = isoLocal(d);
-              const isToday = iso === todayIso;
-              return (
-                <div key={iso} style={{ display: "contents" }}>
-                  <div className={`gt-day ${isToday ? "today" : ""}`}>
-                    <span className="gt-dow">{WEEKDAYS[i]}</span>
-                    <span className="gt-date">{d.getDate()}.</span>
-                  </div>
-                  {ACTIVITIES.map((a) => {
-                    const isDone = done(iso, a.key);
-                    const planned = PLAN[a.key]?.includes(i);
-                    return (
-                      <button
-                        key={a.key}
-                        type="button"
-                        aria-label={`${a.label} ${WEEKDAYS[i]}`}
-                        className={`gt-cell ${isDone ? "done" : ""} ${
-                          planned ? "planned" : ""
-                        } ${isToday ? "today" : ""}`}
-                        onClick={() => toggle(iso, a.key)}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="legend">
-            {ACTIVITIES.map((a) => (
-              <span key={a.key} className="legend-item">
-                <b>{a.short}</b> {a.label}
-              </span>
-            ))}
-            <span className="legend-item muted">
-              ◌ Ring = empfohlen · ● grün = erledigt
-            </span>
-          </div>
-        </div>
-
-        <div className="card">
-          <h2>Diese Woche</h2>
-          <div className="sub">{totalDone} Einheiten erledigt.</div>
           {counts.map((c) => {
-            const pct = c.plan ? Math.min(100, (c.done / c.plan) * 100) : c.done ? 100 : 0;
+            const pct = c.plan ? Math.min(100, (c.done / c.plan) * 100) : 0;
             return (
               <div className="prog-row" key={c.key}>
                 <div className="prog-label">{c.label}</div>
@@ -138,18 +100,78 @@ export default function Woche() {
                   <div className="prog-fill" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="prog-val">
-                  {c.done}
-                  {c.plan ? `/${c.plan}` : ""}
+                  {c.done}/{c.plan}
                 </div>
               </div>
             );
           })}
+          <div className="warm-total">
+            <span className="n">
+              {totalDone}/{totalPlan}
+            </span>
+            <span className="hint">Einheiten diese Woche</span>
+          </div>
         </div>
 
+        {/* Tages-Agenda */}
+        {days.map((d, i) => {
+          const iso = isoLocal(d);
+          const isToday = iso === todayIso;
+          const isPast = iso < todayIso;
+          const tasks = dayTasks(i);
+          const openCount = tasks.filter((t) => !done(iso, t.key)).length;
+          return (
+            <div
+              className={`card day-card ${isToday ? "today" : ""} ${
+                isPast ? "past" : ""
+              }`}
+              key={iso}
+            >
+              <div className="day-head">
+                <span className="day-title">
+                  {WEEKDAYS[i]} · {d.getDate()}.{d.getMonth() + 1}.
+                  {isToday && <span className="tag-today">Heute</span>}
+                </span>
+                <span className="day-state">
+                  {openCount === 0
+                    ? "✓ alles erledigt"
+                    : isPast
+                      ? `${tasks.length - openCount}/${tasks.length} geschafft`
+                      : `${tasks.length} Einheit${tasks.length > 1 ? "en" : ""}`}
+                </span>
+              </div>
+              {tasks.map((task) => {
+                const on = done(iso, task.key);
+                return (
+                  <div className={`task-row ${on ? "done" : ""}`} key={task.key}>
+                    <div className="task-info">
+                      <div className="task-name">{task.title}</div>
+                      <div className="task-desc">{task.desc}</div>
+                      {task.href && !on && (
+                        <Link href={task.href} className="demo-link">
+                          Zur Anleitung <Icon name="chevron" size={12} />
+                        </Link>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className={`day-check ${on ? "on" : ""}`}
+                      aria-label={`${task.title} erledigt`}
+                      onClick={() => toggle(iso, task.key)}
+                    >
+                      ✓
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
         <div className="note-box">
-          Tippe eine Zelle, um die Einheit als erledigt zu markieren. Der Ring
-          zeigt die Empfehlung des Wochenplans — Mobility täglich, Technik Mo/Mi/Fr,
-          Kurzspiel Mi/Sa, Gym Mo/Do, Platz am Wochenende.
+          Der Plan: Mobility jeden Tag (rotiert automatisch durch die Bereiche),
+          Range Mo/Mi/Fr, Kurzspiel Mi/Sa, Gym Mo/Do, Platz am Wochenende.
+          Verpasst ist egal — einfach beim nächsten Tag weitermachen.
         </div>
       </div>
     </>

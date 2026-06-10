@@ -9,7 +9,7 @@ import { useObject } from "@/lib/store";
 import { EditableText } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 import { FOCUS, PROFILE, NEXT_STEPS, TEE_TIME } from "@/lib/seed";
-import { ACTIVITIES, PLAN, isoLocal, dowIndex } from "@/lib/plan";
+import { dayTasks, isoLocal, dowIndex } from "@/lib/plan";
 
 function isThisWeek(dateIso: string): boolean {
   const diff = (Date.now() - new Date(dateIso).getTime()) / 86400000;
@@ -55,7 +55,7 @@ export default function Dashboard() {
   const now = new Date();
   const todayIso = isoLocal(now);
   const todayDow = dowIndex(now);
-  const todays = ACTIVITIES.filter((a) => PLAN[a.key]?.includes(todayDow));
+  const todays = dayTasks(todayDow);
   const doneToday = log.value[todayIso] || [];
 
   function toggleToday(key: string) {
@@ -108,13 +108,18 @@ export default function Dashboard() {
             return (
               <div className={`task-row ${on ? "done" : ""}`} key={a.key}>
                 <div className="task-info">
-                  <div className="task-name">{a.label}</div>
+                  <div className="task-name">{a.title}</div>
                   <div className="task-desc">{a.desc}</div>
+                  {a.href && !on && (
+                    <Link href={a.href} className="demo-link">
+                      Zur Anleitung <Icon name="chevron" size={12} />
+                    </Link>
+                  )}
                 </div>
                 <button
                   type="button"
                   className={`day-check ${on ? "on" : ""}`}
-                  aria-label={`${a.label} erledigt`}
+                  aria-label={`${a.title} erledigt`}
                   onClick={() => toggleToday(a.key)}
                 >
                   ✓
