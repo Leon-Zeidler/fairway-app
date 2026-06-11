@@ -128,6 +128,7 @@ export interface StringList {
   add: (value: string) => void;
   update: (index: number, value: string) => void;
   remove: (index: number) => void;
+  setAll: (items: string[]) => void;
   reset: () => void;
 }
 
@@ -139,6 +140,7 @@ export function useStringList(key: string, seed: string[]): StringList {
     add: (v) => setValue([...value, v]),
     update: (index, v) => setValue(value.map((x, i) => (i === index ? v : x))),
     remove: (index) => setValue(value.filter((_, i) => i !== index)),
+    setAll: (items) => setValue(items),
     reset,
   };
 }

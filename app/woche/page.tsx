@@ -17,6 +17,7 @@ type WeekLog = Record<string, string[]>;
 
 export default function Woche() {
   const log = useObject<WeekLog>("weekLog", {});
+  const plan = useObject<Record<string, number[]>>("plan", PLAN);
   const [offset, setOffset] = useState(0);
 
   const monday = mondayOf(offset);
@@ -43,7 +44,7 @@ export default function Woche() {
   const counts = ACTIVITIES.map((a) => ({
     ...a,
     done: days.filter((d) => done(isoLocal(d), a.key)).length,
-    plan: PLAN[a.key]?.length ?? 0,
+    plan: (plan.value[a.key] ?? PLAN[a.key])?.length ?? 0,
   }));
   const totalDone = counts.reduce((s, c) => s + c.done, 0);
   const totalPlan = counts.reduce((s, c) => s + c.plan, 0);
@@ -118,7 +119,7 @@ export default function Woche() {
           const iso = isoLocal(d);
           const isToday = iso === todayIso;
           const isPast = iso < todayIso;
-          const tasks = dayTasks(i);
+          const tasks = dayTasks(i, plan.value);
           const openCount = tasks.filter((t) => !done(iso, t.key)).length;
           return (
             <div

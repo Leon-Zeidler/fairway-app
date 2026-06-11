@@ -6,6 +6,7 @@ import {
   Club,
   Drill,
   EquipItem,
+  Focus,
   Profile,
   Routine,
   TeeTime,
@@ -15,7 +16,7 @@ import {
 export const MANTRA = "Kopf hoch · Schulter unter Kinn · Gewicht rechts laden";
 
 /** Aktueller Trainingsfokus — wird auf "Heute" und im Training angezeigt. */
-export const FOCUS = {
+export const FOCUS: Focus = {
   title: "Swing Path — von innen schwingen",
   why: "Die 114 kam von „über den Ball“: getoppte Driver, dünne Eisen, kein Vertrauen. Der Pfad von innen fixt alle drei.",
   cues: [

@@ -8,6 +8,7 @@ const items: { href: string; label: string; ico: IconName }[] = [
   { href: "/", label: "Heute", ico: "today" },
   { href: "/woche", label: "Woche", ico: "calendar" },
   { href: "/training", label: "Training", ico: "training" },
+  { href: "/coach", label: "Coach", ico: "coach" },
   { href: "/bag", label: "Bag", ico: "bag" },
   { href: "/turnier", label: "Turnier", ico: "trophy" },
   { href: "/journal", label: "Journal", ico: "journal" },

@@ -5,11 +5,12 @@ import Link from "next/link";
 import { Session, SESSION_LABELS, TeeTime } from "@/lib/types";
 import { getSessions, computeStreak } from "@/lib/storage";
 import { isCloudEnabled } from "@/lib/supabaseClient";
-import { useObject } from "@/lib/store";
+import { Focus } from "@/lib/types";
+import { useObject, useStringList } from "@/lib/store";
 import { EditableText } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 import { FOCUS, PROFILE, NEXT_STEPS, TEE_TIME } from "@/lib/seed";
-import { dayTasks, isoLocal, dowIndex } from "@/lib/plan";
+import { dayTasks, isoLocal, dowIndex, PLAN } from "@/lib/plan";
 
 function isThisWeek(dateIso: string): boolean {
   const diff = (Date.now() - new Date(dateIso).getTime()) / 86400000;
@@ -39,6 +40,9 @@ export default function Dashboard() {
   const profile = useObject("profile", PROFILE);
   const tee = useObject<TeeTime>("teeTime", TEE_TIME);
   const log = useObject<WeekLog>("weekLog", {});
+  const focus = useObject<Focus>("focus", FOCUS);
+  const plan = useObject<Record<string, number[]>>("plan", PLAN);
+  const nextSteps = useStringList("nextSteps", NEXT_STEPS);
 
   useEffect(() => {
     getSessions()
@@ -55,7 +59,7 @@ export default function Dashboard() {
   const now = new Date();
   const todayIso = isoLocal(now);
   const todayDow = dowIndex(now);
-  const todays = dayTasks(todayDow);
+  const todays = dayTasks(todayDow, plan.value);
   const doneToday = log.value[todayIso] || [];
 
   function toggleToday(key: string) {
@@ -87,14 +91,28 @@ export default function Dashboard() {
         {/* Aktueller Fokus */}
         <div className="mantra">
           <div className="small">Dein Fokus</div>
-          <div className="big">{FOCUS.title}</div>
-          <div className="why">{FOCUS.why}</div>
-          {FOCUS.cues.map((c) => (
+          <div className="big">{focus.value.title}</div>
+          <div className="why">{focus.value.why}</div>
+          {focus.value.cues.map((c) => (
             <div className="cue" key={c}>
               {c}
             </div>
           ))}
         </div>
+
+        {/* Coach-CTA */}
+        <Link href="/coach" className="coach-cta">
+          <span className="coach-cta-icon">
+            <Icon name="coach" size={20} />
+          </span>
+          <span className="coach-cta-text">
+            <span className="coach-cta-title">Frag deinen Coach</span>
+            <span className="coach-cta-sub">
+              Gefühl schildern → Plan, Bag & Technik anpassen
+            </span>
+          </span>
+          <Icon name="chevron" size={18} className="coach-cta-chev" />
+        </Link>
 
         {/* Heute dran */}
         <div className="card">
@@ -272,7 +290,7 @@ export default function Dashboard() {
         {/* Nächste Schritte (kuratiert) */}
         <div className="card">
           <h2>Nächste Schritte</h2>
-          {NEXT_STEPS.map((s) => (
+          {nextSteps.items.map((s) => (
             <div className="list-row" key={s}>
               <Icon name="target" size={13} className="bullet" />
               <span className="body">{s}</span>

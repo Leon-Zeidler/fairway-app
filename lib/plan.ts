@@ -95,19 +95,25 @@ const MOBILITY_BY_DOW: Record<number, [string, string, string]> = {
   6: ["Mobility · Recovery", "Tag 4 · 10 Min — Ganzkörper lockern", "mob4"],
 };
 
-/** Konkrete Aufgaben für einen Wochentag (0 = Mo). */
-export function dayTasks(dow: number): DayTask[] {
+/** Konkrete Aufgaben für einen Wochentag (0 = Mo). Plan ist KI-/nutzeränderbar. */
+export function dayTasks(
+  dow: number,
+  plan: Record<string, number[]> = PLAN
+): DayTask[] {
   const tasks: DayTask[] = [];
+  const on = (key: string) => (plan[key] ?? PLAN[key] ?? []).includes(dow);
 
-  const [mTitle, mDesc, mProg] = MOBILITY_BY_DOW[dow];
-  tasks.push({
-    key: "mobility",
-    title: mTitle,
-    desc: mDesc,
-    href: `/programm/${mProg}`,
-  });
+  if (on("mobility")) {
+    const [mTitle, mDesc, mProg] = MOBILITY_BY_DOW[dow];
+    tasks.push({
+      key: "mobility",
+      title: mTitle,
+      desc: mDesc,
+      href: `/programm/${mProg}`,
+    });
+  }
 
-  if (PLAN.technik.includes(dow)) {
+  if (on("technik")) {
     tasks.push({
       key: "technik",
       title: "Range · geführtes Programm",
@@ -115,7 +121,7 @@ export function dayTasks(dow: number): DayTask[] {
       href: "/programm/range",
     });
   }
-  if (PLAN.kurzspiel.includes(dow)) {
+  if (on("kurzspiel")) {
     tasks.push({
       key: "kurzspiel",
       title: "Kurzspiel · 15 Min",
@@ -123,7 +129,7 @@ export function dayTasks(dow: number): DayTask[] {
       href: "/programm/kurzspiel",
     });
   }
-  if (PLAN.gym.includes(dow)) {
+  if (on("gym")) {
     tasks.push({
       key: "gym",
       title: dow === 0 ? "Gym · Rumpf — Rotation" : "Gym · Beine — Squat Power",
@@ -131,7 +137,7 @@ export function dayTasks(dow: number): DayTask[] {
       href: dow === 0 ? "/programm/gym2" : "/programm/gym1",
     });
   }
-  if (PLAN.platz.includes(dow)) {
+  if (on("platz")) {
     tasks.push({
       key: "platz",
       title: "Platz · Runde spielen",

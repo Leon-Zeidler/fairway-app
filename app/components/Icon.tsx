@@ -13,7 +13,8 @@ export type IconName =
   | "plus"
   | "reset"
   | "target"
-  | "image";
+  | "image"
+  | "coach";
 
 const PATHS: Record<IconName, JSX.Element> = {
   // Haus / Heute
@@ -71,6 +72,13 @@ const PATHS: Record<IconName, JSX.Element> = {
       <rect x="3" y="4" width="18" height="16" rx="2.5" />
       <circle cx="8.5" cy="9.5" r="1.6" />
       <path d="m4 17 5-4.5L14 17l3-2.5 4 3.5" />
+    </>
+  ),
+  // Coach — Chat-Bubble mit Funke
+  coach: (
+    <>
+      <path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+      <path d="M12 8.2l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7.7-1.6Z" />
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,

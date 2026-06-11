@@ -102,3 +102,10 @@ export interface Profile {
   swingSpeed: string;
   level: string;
 }
+
+/** Aktueller Trainingsfokus (KI-/nutzeränderbar). */
+export interface Focus {
+  title: string;
+  why: string;
+  cues: string[];
+}

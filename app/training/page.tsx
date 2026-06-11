@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Focus } from "@/lib/types";
+import { useObject } from "@/lib/store";
 import { FOCUS } from "@/lib/seed";
 import { PROGRAMS } from "@/lib/programs";
 import Icon from "@/app/components/Icon";
@@ -12,6 +14,7 @@ const GROUPS: { key: "golf" | "mobility" | "gym"; label: string }[] = [
 ];
 
 export default function Training() {
+  const focus = useObject<Focus>("focus", FOCUS);
   return (
     <>
       <header className="topbar">
@@ -22,8 +25,8 @@ export default function Training() {
       <div className="container">
         <div className="mantra">
           <div className="small">Dein Fokus</div>
-          <div className="big">{FOCUS.title}</div>
-          {FOCUS.cues.map((c) => (
+          <div className="big">{focus.value.title}</div>
+          {focus.value.cues.map((c) => (
             <div className="cue" key={c}>
               {c}
             </div>
