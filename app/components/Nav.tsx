@@ -19,7 +19,10 @@ export default function Nav() {
     <nav className="nav">
       {items.map((it) => {
         const active =
-          it.href === "/" ? path === "/" : path.startsWith(it.href);
+          it.href === "/"
+            ? path === "/"
+            : path.startsWith(it.href) ||
+              (it.href === "/training" && path.startsWith("/programm"));
         return (
           <Link key={it.href} href={it.href} className={active ? "active" : ""}>
             <Icon name={it.ico} />

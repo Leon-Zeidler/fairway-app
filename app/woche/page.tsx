@@ -149,7 +149,7 @@ export default function Woche() {
                       <div className="task-desc">{task.desc}</div>
                       {task.href && !on && (
                         <Link href={task.href} className="demo-link">
-                          Zur Anleitung <Icon name="chevron" size={12} />
+                          Zum Programm <Icon name="chevron" size={12} />
                         </Link>
                       )}
                     </div>

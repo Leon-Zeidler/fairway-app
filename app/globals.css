@@ -1208,6 +1208,70 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+/* Programm-Bibliothek */
+.pcard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+.pcard:first-of-type {
+  border-top: none;
+}
+.pcard:active {
+  opacity: 0.6;
+}
+.pcard-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pcard-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+.pcard-focus {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.pcard-meta {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.pcard-chev {
+  flex: none;
+  color: var(--faint);
+}
+
+/* Zurück-Button (Programm-Seite) */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  margin-bottom: 12px;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease);
+}
+.back-btn:active {
+  transform: scale(0.9);
+}
+
 .demo-link {
   display: inline-flex;
   align-items: center;

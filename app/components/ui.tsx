@@ -177,6 +177,23 @@ export function EditableList({
   );
 }
 
+/* ── Bild-Link zur Übung (öffnet Bildersuche, keine Fremdbilder) ── */
+
+export function exerciseName(text: string): string {
+  const head = text.split(/[—·(]/)[0].replace(/^[\d:.\s–-]+/, "").trim();
+  return head || text;
+}
+
+export function DemoLink({ query }: { query: string }) {
+  const url =
+    "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(query);
+  return (
+    <a className="demo-link" href={url} target="_blank" rel="noopener noreferrer">
+      <Icon name="image" size={13} /> Bild ansehen
+    </a>
+  );
+}
+
 /* ── Reset-Button (für Objekt-Sammlungen) ───────────────────────── */
 
 export function ResetButton({ onReset }: { onReset: () => void }) {

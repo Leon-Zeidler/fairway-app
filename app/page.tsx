@@ -112,7 +112,7 @@ export default function Dashboard() {
                   <div className="task-desc">{a.desc}</div>
                   {a.href && !on && (
                     <Link href={a.href} className="demo-link">
-                      Zur Anleitung <Icon name="chevron" size={12} />
+                      Zum Programm <Icon name="chevron" size={12} />
                     </Link>
                   )}
                 </div>

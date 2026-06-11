@@ -84,29 +84,35 @@ export interface DayTask {
 }
 
 // Mobility-Rotation über die Woche (Tag 5 = Pivot-Fokus, 2× pro Woche).
-const MOBILITY_BY_DOW: Record<number, [string, string]> = {
-  0: ["Mobility · Rotation & Wirbelsäule", "Tag 1 · 10 Min — Drehung freimachen"],
-  1: ["Mobility · Hüfte & Gesäß", "Tag 2 · 10 Min — Basis gegen Aufrichten"],
-  2: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix"],
-  3: ["Mobility · Schultern & Brust", "Tag 3 · 10 Min — freier Schulter-Turn"],
-  4: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix"],
-  5: ["Mobility · Hüfte kurz", "Tag 2 · 5 Min — vor der Runde lockern"],
-  6: ["Mobility · Recovery", "Tag 4 · 10 Min — Ganzkörper lockern"],
+// [Titel, Beschreibung, Programm-Id]
+const MOBILITY_BY_DOW: Record<number, [string, string, string]> = {
+  0: ["Mobility · Rotation & Wirbelsäule", "Tag 1 · 10 Min — Drehung freimachen", "mob1"],
+  1: ["Mobility · Hüfte & Gesäß", "Tag 2 · 10 Min — Basis gegen Aufrichten", "mob2"],
+  2: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix", "mob5"],
+  3: ["Mobility · Schultern & Brust", "Tag 3 · 10 Min — freier Schulter-Turn", "mob3"],
+  4: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix", "mob5"],
+  5: ["Mobility · Hüfte kurz", "Tag 2 · 5 Min — vor der Runde lockern", "mob2"],
+  6: ["Mobility · Recovery", "Tag 4 · 10 Min — Ganzkörper lockern", "mob4"],
 };
 
 /** Konkrete Aufgaben für einen Wochentag (0 = Mo). */
 export function dayTasks(dow: number): DayTask[] {
   const tasks: DayTask[] = [];
 
-  const [mTitle, mDesc] = MOBILITY_BY_DOW[dow];
-  tasks.push({ key: "mobility", title: mTitle, desc: mDesc, href: "/training" });
+  const [mTitle, mDesc, mProg] = MOBILITY_BY_DOW[dow];
+  tasks.push({
+    key: "mobility",
+    title: mTitle,
+    desc: mDesc,
+    href: `/programm/${mProg}`,
+  });
 
   if (PLAN.technik.includes(dow)) {
     tasks.push({
       key: "technik",
       title: "Range · geführtes Programm",
       desc: "Swing Path → Driver → Basics · 60 Bälle reichen",
-      href: "/training",
+      href: "/programm/range",
     });
   }
   if (PLAN.kurzspiel.includes(dow)) {
@@ -114,15 +120,15 @@ export function dayTasks(dow: number): DayTask[] {
       key: "kurzspiel",
       title: "Kurzspiel · 15 Min",
       desc: "Chippen & Pitchen — ruhige Hände, Landepunkt wählen",
-      href: "/turnier",
+      href: "/programm/kurzspiel",
     });
   }
   if (PLAN.gym.includes(dow)) {
     tasks.push({
       key: "gym",
       title: dow === 0 ? "Gym · Rumpf — Rotation" : "Gym · Beine — Squat Power",
-      desc: "Plan unter Routinen → Gym",
-      href: "/training",
+      desc: "Geführtes Workout mit Sätzen & Wiederholungen",
+      href: dow === 0 ? "/programm/gym2" : "/programm/gym1",
     });
   }
   if (PLAN.platz.includes(dow)) {
