@@ -9,8 +9,8 @@ import {
   Session,
   TeeTime,
 } from "@/lib/types";
-import { useCollection, useObject, useStringList } from "@/lib/store";
-import { getSessions } from "@/lib/storage";
+import { useCollection, useObject, useStringList, uid } from "@/lib/store";
+import { getSessions, addSession } from "@/lib/storage";
 import {
   CLUBS,
   EQUIPMENT,
@@ -196,6 +196,39 @@ export default function Coach() {
       case "set_next_steps":
         nextSteps.setAll(a.items);
         break;
+      case "add_next_step":
+        nextSteps.setAll([...nextSteps.items, a.item]);
+        break;
+      case "set_club": {
+        const needle = a.name.toLowerCase();
+        const club = clubs.items.find((c) =>
+          c.name.toLowerCase().includes(needle)
+        );
+        if (club) clubs.update(club.id, { distance: a.distance });
+        break;
+      }
+      case "log_session": {
+        void addSession({
+          id: uid("s"),
+          date: isoLocal(new Date()),
+          type: a.sessionType,
+          rating: a.rating ?? 3,
+          drills: [],
+          balls: a.balls,
+          score: a.score,
+          notes: a.notes,
+          createdAt: new Date().toISOString(),
+          user_id: null,
+        });
+        break;
+      }
+      case "complete_today": {
+        const today = isoLocal(new Date());
+        const cur = weekLog.value[today] || [];
+        const merged = Array.from(new Set([...cur, ...a.activities]));
+        weekLog.set({ [today]: merged });
+        break;
+      }
     }
   }
 

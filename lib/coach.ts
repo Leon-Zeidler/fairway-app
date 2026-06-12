@@ -36,7 +36,18 @@ export type CoachAction =
       level?: string;
     }
   | { type: "set_tee_time"; name?: string; date?: string; time?: string }
-  | { type: "set_next_steps"; items: string[] };
+  | { type: "set_next_steps"; items: string[] }
+  | { type: "add_next_step"; item: string }
+  | { type: "set_club"; name: string; distance: string }
+  | {
+      type: "log_session";
+      sessionType: "range" | "course" | "gym" | "stretch";
+      balls?: number;
+      score?: number;
+      rating?: number;
+      notes?: string;
+    }
+  | { type: "complete_today"; activities: ActivityKey[] };
 
 export interface CoachResponse {
   reply: string;
@@ -92,12 +103,25 @@ Verfügbare Aktionen (nur diese, exakt dieses Schema):
   Trägt das nächste Turnier ein.
 
 - {"type":"set_next_steps","items":["...","..."]}
-  Ersetzt die "Nächste Schritte"-Liste auf Heute.
+  Ersetzt die ganze "Nächste Schritte"-Liste auf Heute.
+
+- {"type":"add_next_step","item":"..."}
+  Hängt EINEN Punkt an "Nächste Schritte" an.
+
+- {"type":"set_club","name":"7 Eisen","distance":"150 m"}
+  Aktualisiert die Carry-Distanz eines Schlägers (match über den Namen).
+
+- {"type":"log_session","sessionType":"range|course|gym|stretch","balls":60,"score":92,"rating":3,"notes":"..."}
+  Loggt eine Trainingseinheit/Runde ins Journal. rating 1-5. Nur passende Felder (balls für Range, score für course).
+
+- {"type":"complete_today","activities":["mobility","technik"]}
+  Hakt heute Aktivitäten im Wochenplan als erledigt ab.
 
 Regeln für actions:
-- Schlage Aktionen NUR vor, wenn der Nutzer eine Änderung will oder du sie klar empfiehlst.
+- Sei proaktiv: Wenn der Nutzer z.B. von einer Runde/Range-Session erzählt, biete an, sie zu loggen (log_session). Wenn er sagt "52° ist da", set_equipment available=true. Wenn er ein neues Gefühl/Problem schildert, passe Fokus & Plan an.
+- Du darfst mehrere Aktionen in einem Schritt vorschlagen.
 - Wenn unsicher, frage lieber im "reply" nach, statt zu raten. Leere "actions": [] ist völlig ok.
-- Erfinde keine Werte. Greife auf den Kontext zurück.
+- Erfinde keine Werte. Greife auf den Kontext zurück. Erhalte bestehende Plan-Tage, wenn nur kleine Anpassungen gewünscht sind (nicht aus Versehen Mobility von täglich auf wenige Tage reduzieren).
 `.trim();
 
 export function buildSystemPrompt(ctx: CoachContext): string {
@@ -140,6 +164,18 @@ export function describeAction(a: CoachAction): string {
       return `Turnier${a.name ? ` „${a.name}“` : ""}${a.date ? ` · ${a.date}` : ""}${a.time ? ` · ${a.time}` : ""}`;
     case "set_next_steps":
       return `Nächste Schritte (${a.items.length}) ersetzen`;
+    case "add_next_step":
+      return `Nächster Schritt: „${a.item}“`;
+    case "set_club":
+      return `${a.name} → ${a.distance}`;
+    case "log_session": {
+      const bits: string[] = [a.sessionType];
+      if (a.balls) bits.push(`${a.balls} Bälle`);
+      if (a.score) bits.push(`${a.score} Pkt`);
+      return `Session loggen (${bits.join(" · ")})`;
+    }
+    case "complete_today":
+      return `Heute abhaken: ${a.activities.join(", ")}`;
     default:
       return "Änderung";
   }
