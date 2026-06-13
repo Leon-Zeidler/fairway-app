@@ -47,7 +47,15 @@ export type CoachAction =
       rating?: number;
       notes?: string;
     }
-  | { type: "complete_today"; activities: ActivityKey[] };
+  | { type: "complete_today"; activities: ActivityKey[] }
+  | {
+      type: "set_program";
+      id: string;
+      title?: string;
+      focus?: string;
+      sections: { title?: string; steps: string[] }[];
+    }
+  | { type: "add_program_step"; id: string; step: string };
 
 export interface CoachResponse {
   reply: string;
@@ -78,6 +86,12 @@ export interface CoachContext {
   }[];
   weekDone: Record<string, number>;
   teeTime: { name: string; date: string; time: string };
+  programs: {
+    id: string;
+    title: string;
+    group: string;
+    sections: { title?: string; steps: string[] }[];
+  }[];
   today: string;
 }
 
@@ -116,6 +130,12 @@ Verfügbare Aktionen (nur diese, exakt dieses Schema):
 
 - {"type":"complete_today","activities":["mobility","technik"]}
   Hakt heute Aktivitäten im Wochenplan als erledigt ab.
+
+- {"type":"set_program","id":"range","title":"...","focus":"...","sections":[{"title":"1 · ...","steps":["Übung — Detail","..."]}]}
+  Schreibt ein ganzes Programm/Workout neu (Schritte als "Name — Detail"). "id" aus dem programs-Kontext (z.B. range, kurzspiel, mob1..mob5, gym1..gym4). Behalte die Section-Struktur sinnvoll.
+
+- {"type":"add_program_step","id":"gym1","step":"Hip Thrust — 3×10"}
+  Hängt EINE Übung an ein Programm an.
 
 Regeln für actions:
 - Sei proaktiv: Wenn der Nutzer z.B. von einer Runde/Range-Session erzählt, biete an, sie zu loggen (log_session). Wenn er sagt "52° ist da", set_equipment available=true. Wenn er ein neues Gefühl/Problem schildert, passe Fokus & Plan an.
@@ -176,6 +196,12 @@ export function describeAction(a: CoachAction): string {
     }
     case "complete_today":
       return `Heute abhaken: ${a.activities.join(", ")}`;
+    case "set_program": {
+      const n = a.sections.reduce((s, sec) => s + sec.steps.length, 0);
+      return `Programm „${a.title ?? a.id}“ neu (${n} Übungen)`;
+    }
+    case "add_program_step":
+      return `Programm „${a.id}“: + „${a.step}“`;
     default:
       return "Änderung";
   }

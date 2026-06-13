@@ -90,6 +90,47 @@ export function getProgram(id: string): Program | undefined {
   return PROGRAMS.find((p) => p.id === id);
 }
 
+/* ── Overrides (vom Coach/Nutzer umgeschriebene Programme) ──────── */
+
+export interface ProgramOverride {
+  title?: string;
+  focus?: string;
+  sections?: ProgramSection[];
+}
+
+export type ProgramOverrides = Record<string, ProgramOverride>;
+
+export function applyOverride(p: Program, ov?: ProgramOverride): Program {
+  if (!ov) return p;
+  return {
+    ...p,
+    title: ov.title ?? p.title,
+    focus: ov.focus ?? p.focus,
+    sections: ov.sections ?? p.sections,
+  };
+}
+
+export function resolveProgram(
+  id: string,
+  overrides: ProgramOverrides
+): Program | undefined {
+  const base = getProgram(id);
+  return base ? applyOverride(base, overrides[id]) : undefined;
+}
+
+/** Kompakte Programmliste für den Coach-Kontext (mit Overrides). */
+export function programsForContext(overrides: ProgramOverrides) {
+  return PROGRAMS.map((p) => {
+    const r = applyOverride(p, overrides[p.id]);
+    return {
+      id: r.id,
+      title: r.title,
+      group: r.group,
+      sections: r.sections.map((s) => ({ title: s.title, steps: s.steps })),
+    };
+  });
+}
+
 /** Such-Suffix für die Bild-Links, je Programmgruppe. */
 export const DEMO_SUFFIX: Record<Program["group"], string> = {
   golf: "golf drill",

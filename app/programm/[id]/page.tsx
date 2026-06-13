@@ -5,7 +5,11 @@ import Link from "next/link";
 import { Session } from "@/lib/types";
 import { addSession } from "@/lib/storage";
 import { uid, useObject } from "@/lib/store";
-import { getProgram, DEMO_SUFFIX } from "@/lib/programs";
+import {
+  resolveProgram,
+  DEMO_SUFFIX,
+  ProgramOverrides,
+} from "@/lib/programs";
 import { isoLocal } from "@/lib/plan";
 import { DemoLink, exerciseName } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
@@ -13,7 +17,8 @@ import Icon from "@/app/components/Icon";
 type WeekLog = Record<string, string[]>;
 
 export default function ProgramPage({ params }: { params: { id: string } }) {
-  const program = getProgram(params.id);
+  const overrides = useObject<ProgramOverrides>("programOverrides", {});
+  const program = resolveProgram(params.id, overrides.value);
   const log = useObject<WeekLog>("weekLog", {});
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState(false);

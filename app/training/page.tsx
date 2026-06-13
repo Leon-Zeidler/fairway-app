@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Focus } from "@/lib/types";
 import { useObject } from "@/lib/store";
 import { FOCUS } from "@/lib/seed";
-import { PROGRAMS } from "@/lib/programs";
+import { PROGRAMS, applyOverride, ProgramOverrides } from "@/lib/programs";
 import Icon from "@/app/components/Icon";
 
 const GROUPS: { key: "golf" | "mobility" | "gym"; label: string }[] = [
@@ -15,6 +15,7 @@ const GROUPS: { key: "golf" | "mobility" | "gym"; label: string }[] = [
 
 export default function Training() {
   const focus = useObject<Focus>("focus", FOCUS);
+  const overrides = useObject<ProgramOverrides>("programOverrides", {});
   return (
     <>
       <header className="topbar">
@@ -39,7 +40,8 @@ export default function Training() {
             <div key={g.key}>
               <div className="group-label">{g.label}</div>
               <div className="card">
-                {list.map((p) => {
+                {list.map((base) => {
+                  const p = applyOverride(base, overrides.value[base.id]);
                   const steps = p.sections.reduce((n, s) => n + s.steps.length, 0);
                   return (
                     <Link href={`/programm/${p.id}`} className="pcard" key={p.id}>

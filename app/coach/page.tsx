@@ -10,7 +10,7 @@ import {
   TeeTime,
 } from "@/lib/types";
 import { useCollection, useObject, useStringList, uid } from "@/lib/store";
-import { getSessions, addSession } from "@/lib/storage";
+import { getSessions, addSession, deleteSession } from "@/lib/storage";
 import {
   CLUBS,
   EQUIPMENT,
@@ -19,7 +19,12 @@ import {
   PROFILE,
   TEE_TIME,
 } from "@/lib/seed";
-import { PLAN, WEEKDAYS, isoLocal, mondayOf } from "@/lib/plan";
+import { PLAN, isoLocal, mondayOf } from "@/lib/plan";
+import {
+  programsForContext,
+  resolveProgram,
+  ProgramOverrides,
+} from "@/lib/programs";
 import {
   ChatMessage,
   CoachAction,
@@ -29,9 +34,25 @@ import {
 } from "@/lib/coach";
 import Icon from "@/app/components/Icon";
 
+interface UndoToken {
+  snapshot: {
+    focus: Focus;
+    plan: Record<string, number[]>;
+    profile: Profile;
+    tee: TeeTime;
+    nextSteps: string[];
+    clubs: Club[];
+    equip: EquipItem[];
+    weekLog: Record<string, string[]>;
+    overrides: ProgramOverrides;
+  };
+  createdSessions: string[];
+}
+
 interface Msg extends ChatMessage {
   actions?: CoachAction[];
-  applied?: boolean;
+  undo?: UndoToken;
+  undone?: boolean;
 }
 
 const SUGGESTIONS = [
@@ -50,6 +71,7 @@ export default function Coach() {
   const clubs = useCollection<Club>("clubs", CLUBS);
   const nextSteps = useStringList("nextSteps", NEXT_STEPS);
   const weekLog = useObject<Record<string, string[]>>("weekLog", {});
+  const overrides = useObject<ProgramOverrides>("programOverrides", {});
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -101,6 +123,7 @@ export default function Coach() {
       })),
       weekDone,
       teeTime: tee.value,
+      programs: programsForContext(overrides.value),
       today: new Date().toLocaleDateString("de-DE", {
         weekday: "long",
         day: "numeric",
@@ -126,13 +149,12 @@ export default function Coach() {
         }),
       });
       const data: CoachResponse = await res.json();
+      const acts = data.actions?.length ? data.actions : undefined;
+      // Auto-übernehmen, sobald die Antwort da ist (mit Rückgängig-Token).
+      const undo = acts ? applyNow(acts) : undefined;
       setMsgs((m) => [
         ...m,
-        {
-          role: "assistant",
-          content: data.reply,
-          actions: data.actions?.length ? data.actions : undefined,
-        },
+        { role: "assistant", content: data.reply, actions: acts, undo },
       ]);
     } catch {
       setMsgs((m) => [
@@ -144,12 +166,41 @@ export default function Coach() {
     }
   }
 
-  function applyActions(index: number, actions: CoachAction[]) {
-    actions.forEach((a) => applyOne(a));
-    setMsgs((m) => m.map((x, i) => (i === index ? { ...x, applied: true } : x)));
+  function applyNow(actions: CoachAction[]): UndoToken {
+    const snapshot = {
+      focus: focus.value,
+      plan: plan.value,
+      profile: profile.value,
+      tee: tee.value,
+      nextSteps: nextSteps.items,
+      clubs: clubs.items,
+      equip: equip.items,
+      weekLog: weekLog.value,
+      overrides: overrides.value,
+    };
+    const createdSessions: string[] = [];
+    actions.forEach((a) => applyOne(a, createdSessions));
+    return { snapshot, createdSessions };
   }
 
-  function applyOne(a: CoachAction) {
+  function undo(index: number, token: UndoToken) {
+    const s = token.snapshot;
+    focus.replace(s.focus);
+    plan.replace(s.plan);
+    profile.replace(s.profile);
+    tee.replace(s.tee);
+    nextSteps.setAll(s.nextSteps);
+    clubs.setAll(s.clubs);
+    equip.setAll(s.equip);
+    weekLog.replace(s.weekLog);
+    overrides.replace(s.overrides);
+    token.createdSessions.forEach((id) => void deleteSession(id));
+    setMsgs((m) =>
+      m.map((x, i) => (i === index ? { ...x, undone: true, undo: undefined } : x))
+    );
+  }
+
+  function applyOne(a: CoachAction, created: string[]) {
     switch (a.type) {
       case "set_focus":
         focus.set({
@@ -208,8 +259,10 @@ export default function Coach() {
         break;
       }
       case "log_session": {
+        const id = uid("s");
+        created.push(id);
         void addSession({
-          id: uid("s"),
+          id,
           date: isoLocal(new Date()),
           type: a.sessionType,
           rating: a.rating ?? 3,
@@ -227,6 +280,26 @@ export default function Coach() {
         const cur = weekLog.value[today] || [];
         const merged = Array.from(new Set([...cur, ...a.activities]));
         weekLog.set({ [today]: merged });
+        break;
+      }
+      case "set_program":
+        overrides.set({
+          [a.id]: { title: a.title, focus: a.focus, sections: a.sections },
+        });
+        break;
+      case "add_program_step": {
+        const resolved = resolveProgram(a.id, overrides.value);
+        if (resolved) {
+          const sections = resolved.sections.map((s) => ({
+            ...s,
+            steps: [...s.steps],
+          }));
+          if (sections.length) sections[sections.length - 1].steps.push(a.step);
+          else sections.push({ steps: [a.step] });
+          overrides.set({
+            [a.id]: { ...overrides.value[a.id], sections },
+          });
+        }
         break;
       }
     }
@@ -268,23 +341,22 @@ export default function Coach() {
                 {m.content}
               </div>
               {m.actions && (
-                <div className="chat-actions">
-                  <div className="ca-title">Vorgeschlagene Änderungen</div>
+                <div className={`chat-actions ${m.undone ? "undone" : ""}`}>
+                  <div className="ca-title">
+                    {m.undone ? "Rückgängig gemacht" : "✓ Automatisch übernommen"}
+                  </div>
                   {m.actions.map((a, j) => (
                     <div className="ca-item" key={j}>
                       <Icon name="target" size={12} /> {describeAction(a)}
                     </div>
                   ))}
-                  {m.applied ? (
-                    <div className="ca-applied">✓ Übernommen</div>
-                  ) : (
+                  {!m.undone && m.undo && (
                     <button
                       type="button"
-                      className="btn"
-                      style={{ marginTop: 10 }}
-                      onClick={() => applyActions(i, m.actions!)}
+                      className="ca-undo"
+                      onClick={() => undo(i, m.undo!)}
                     >
-                      Übernehmen
+                      <Icon name="reset" size={14} /> Rückgängig
                     </button>
                   )}
                 </div>
