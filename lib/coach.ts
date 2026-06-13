@@ -92,6 +92,9 @@ export interface CoachContext {
     group: string;
     sections: { title?: string; steps: string[] }[];
   }[];
+  warmup: { club: string; balls: number; detail: string }[];
+  insights: string[];
+  mentalCheck: string[];
   today: string;
 }
 
@@ -106,6 +109,9 @@ Verfügbare Aktionen (nur diese, exakt dieses Schema):
 
 - {"type":"set_plan","activity":"mobility|technik|kurzspiel|gym|platz","days":[0,2,4]}
   Legt fest, an welchen Wochentagen eine Aktivität geplant ist. 0=Mo,1=Di,2=Mi,3=Do,4=Fr,5=Sa,6=So.
+  WICHTIG: "days" ERSETZT die komplette Liste. Gib IMMER die volle gewünschte Liste an,
+  nicht nur die Änderung. Schau in context.plan, was aktuell gesetzt ist, und behalte
+  alles bei, was bleiben soll. Reduziere Mobility NICHT versehentlich von täglich.
 
 - {"type":"set_equipment","match":"52°","status":"good|watch|issue","available":true|false,"note":"..."}
   Ändert ein Equipment. "match" = Teil der Kategorie/Name (z.B. "Driver","52°","Putter"). Nur die Felder setzen, die sich ändern.
@@ -150,14 +156,133 @@ export function buildSystemPrompt(ctx: CoachContext): string {
 Über Leon: 18, ~1 Jahr Golf, ~100-105 mph Schwung, will langfristig Pro/kompetitiver Amateur werden.
 Aktuelle Reise: Reverse-Pivot-Arbeit, letztes Turnier 114 — Hauptprobleme Swing Path (Driver & Eisen, "über den Ball") und getoppte Driver. Beweglichkeit (Hüfte/Brustwirbelsäule) ist die Wurzel. Der 52° Wedge ist bestellt, aber noch nicht da.
 
-Deine Art: direkt, praktisch, ermutigend, auf Augenhöhe. Antworte auf Deutsch, kurz und konkret (keine Romane). Eine klare Sache nach der anderen. Du bist kein Arzt — bei Schmerzen zum Profi raten.
+Deine Art: wie ein richtig guter, erfahrener Coach — direkt, praktisch, ermutigend, auf Augenhöhe. Antworte auf Deutsch, konkret und auf den Punkt (kein Geschwafel, keine generischen Phrasen). Gib echte, umsetzbare Tipps mit konkreten Drills, Schlägerempfehlungen und Distanzen — beziehe dich auf seine echten Daten unten (Distanzen, letzte Sessions, Equipment, Plan). Stelle bei Bedarf EINE gezielte Rückfrage. Du bist kein Arzt — bei Schmerzen zum Profi raten.
 
-Du kennst seinen aktuellen Stand (JSON):
+Denk mit: Wenn etwas im Kontext nicht zu seinem Ziel passt (z.B. Plan zu vollgepackt, Equipment-Problem ungelöst, Fokus veraltet), sprich es an und biete eine passende Aktion an. Sei präzise bei Zahlen und Wochentagen.
+
+Du kennst seinen kompletten aktuellen Stand (JSON — nutze ALLES davon):
 ${JSON.stringify(ctx, null, 2)}
 
 ${ACTION_CATALOG}
 
 Antworte AUSSCHLIESSLICH als JSON: {"reply": "<deine Antwort auf Deutsch>", "actions": [<0..n Aktionen>]}. Kein Text außerhalb des JSON.`;
+}
+
+/* ── Validierung/Säuberung der KI-Aktionen (serverseitig) ───────── */
+
+const ACTIVITY_KEYS: ActivityKey[] = [
+  "mobility",
+  "technik",
+  "kurzspiel",
+  "gym",
+  "platz",
+];
+const STATUSES: EquipStatus[] = ["good", "watch", "issue"];
+const SESSION_TYPES = ["range", "course", "gym", "stretch"];
+
+const str = (v: unknown): string | undefined =>
+  typeof v === "string" && v.trim() ? v.trim() : undefined;
+const strArr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x) => (x as string).trim()) : [];
+const num = (v: unknown): number | undefined =>
+  typeof v === "number" && isFinite(v) ? v : undefined;
+
+/** Filtert ungültige/halbe Aktionen heraus, damit nie ein kaputter Plan entsteht. */
+export function sanitizeActions(raw: unknown): CoachAction[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CoachAction[] = [];
+  for (const a of raw) {
+    if (!a || typeof a !== "object") continue;
+    const t = (a as { type?: string }).type;
+    const o = a as Record<string, unknown>;
+    switch (t) {
+      case "set_focus": {
+        const cues = strArr(o.cues);
+        out.push({ type: "set_focus", title: str(o.title), why: str(o.why), cues: cues.length ? cues : undefined });
+        break;
+      }
+      case "set_plan": {
+        if (!ACTIVITY_KEYS.includes(o.activity as ActivityKey)) break;
+        const days = Array.isArray(o.days)
+          ? Array.from(new Set(o.days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))).sort()
+          : [];
+        out.push({ type: "set_plan", activity: o.activity as ActivityKey, days });
+        break;
+      }
+      case "set_equipment": {
+        const match = str(o.match);
+        if (!match) break;
+        out.push({
+          type: "set_equipment",
+          match,
+          status: STATUSES.includes(o.status as EquipStatus) ? (o.status as EquipStatus) : undefined,
+          available: typeof o.available === "boolean" ? o.available : undefined,
+          note: str(o.note),
+        });
+        break;
+      }
+      case "set_profile":
+        out.push({ type: "set_profile", hcp: str(o.hcp), hcpGoal: str(o.hcpGoal), swingSpeed: str(o.swingSpeed), level: str(o.level) });
+        break;
+      case "set_tee_time":
+        out.push({ type: "set_tee_time", name: str(o.name), date: str(o.date), time: str(o.time) });
+        break;
+      case "set_next_steps": {
+        const items = strArr(o.items);
+        if (items.length) out.push({ type: "set_next_steps", items });
+        break;
+      }
+      case "add_next_step": {
+        const item = str(o.item);
+        if (item) out.push({ type: "add_next_step", item });
+        break;
+      }
+      case "set_club": {
+        const name = str(o.name);
+        const distance = str(o.distance);
+        if (name && distance) out.push({ type: "set_club", name, distance });
+        break;
+      }
+      case "log_session": {
+        const st = SESSION_TYPES.includes(o.sessionType as string) ? (o.sessionType as "range" | "course" | "gym" | "stretch") : undefined;
+        if (!st) break;
+        const rating = num(o.rating);
+        out.push({
+          type: "log_session",
+          sessionType: st,
+          balls: num(o.balls),
+          score: num(o.score),
+          rating: rating ? Math.min(5, Math.max(1, Math.round(rating))) : undefined,
+          notes: str(o.notes),
+        });
+        break;
+      }
+      case "complete_today": {
+        const acts = (strArr(o.activities) as ActivityKey[]).filter((k) => ACTIVITY_KEYS.includes(k));
+        if (acts.length) out.push({ type: "complete_today", activities: acts });
+        break;
+      }
+      case "set_program": {
+        const id = str(o.id);
+        if (!id || !Array.isArray(o.sections)) break;
+        const sections = (o.sections as unknown[])
+          .map((s) => {
+            const sec = s as Record<string, unknown>;
+            return { title: str(sec.title), steps: strArr(sec.steps) };
+          })
+          .filter((s) => s.steps.length);
+        if (sections.length) out.push({ type: "set_program", id, title: str(o.title), focus: str(o.focus), sections });
+        break;
+      }
+      case "add_program_step": {
+        const id = str(o.id);
+        const step = str(o.step);
+        if (id && step) out.push({ type: "add_program_step", id, step });
+        break;
+      }
+    }
+  }
+  return out;
 }
 
 /* ── Menschliche Beschreibung einer Aktion (für die Bestätigung) ── */

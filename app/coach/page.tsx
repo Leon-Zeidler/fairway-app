@@ -18,6 +18,9 @@ import {
   NEXT_STEPS,
   PROFILE,
   TEE_TIME,
+  WARMUP,
+  INSIGHTS,
+  MENTAL_CHECK,
 } from "@/lib/seed";
 import { PLAN, isoLocal, mondayOf } from "@/lib/plan";
 import {
@@ -113,7 +116,7 @@ export default function Coach() {
         available: e.available !== false,
       })),
       nextSteps: nextSteps.items,
-      recentSessions: sessions.slice(0, 6).map((s) => ({
+      recentSessions: sessions.slice(0, 12).map((s) => ({
         date: s.date,
         type: s.type,
         balls: s.balls,
@@ -124,6 +127,13 @@ export default function Coach() {
       weekDone,
       teeTime: tee.value,
       programs: programsForContext(overrides.value),
+      warmup: WARMUP.map((w) => ({
+        club: w.club,
+        balls: w.balls,
+        detail: w.detail,
+      })),
+      insights: INSIGHTS,
+      mentalCheck: MENTAL_CHECK,
       today: new Date().toLocaleDateString("de-DE", {
         weekday: "long",
         day: "numeric",
