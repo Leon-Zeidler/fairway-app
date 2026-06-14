@@ -1116,6 +1116,21 @@ textarea {
   padding-left: 4px;
 }
 
+/* Material-Inventar (Training) */
+.gear-group-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 12px 0 8px;
+}
+.gear-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* ── Woche · Tracker ────────────────────────────────────────────── */
 
 .week-nav {

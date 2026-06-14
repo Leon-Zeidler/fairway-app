@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Focus } from "@/lib/types";
-import { useObject } from "@/lib/store";
-import { FOCUS } from "@/lib/seed";
+import { Focus, GearItem } from "@/lib/types";
+import { useObject, useCollection } from "@/lib/store";
+import { FOCUS, GEAR } from "@/lib/seed";
 import { PROGRAMS, applyOverride, ProgramOverrides } from "@/lib/programs";
 import Icon from "@/app/components/Icon";
 
@@ -13,9 +13,16 @@ const GROUPS: { key: "golf" | "mobility" | "gym"; label: string }[] = [
   { key: "gym", label: "Gym" },
 ];
 
+const GEAR_GROUPS: { key: "mobility" | "gym"; label: string }[] = [
+  { key: "mobility", label: "Mobility" },
+  { key: "gym", label: "Gym" },
+];
+
 export default function Training() {
   const focus = useObject<Focus>("focus", FOCUS);
   const overrides = useObject<ProgramOverrides>("programOverrides", {});
+  const gear = useCollection<GearItem>("gear", GEAR);
+
   return (
     <>
       <header className="topbar">
@@ -30,6 +37,35 @@ export default function Training() {
           {focus.value.cues.map((c) => (
             <div className="cue" key={c}>
               {c}
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <h2>Mein Material</h2>
+          <div className="sub">
+            Was hast du da? Fehlt etwas, zeigt dein Plan automatisch eine
+            Alternative ohne Gerät.
+          </div>
+          {GEAR_GROUPS.map((g) => (
+            <div key={g.key} style={{ marginTop: 6 }}>
+              <div className="gear-group-label">{g.label}</div>
+              <div className="gear-grid">
+                {gear.items
+                  .filter((it) => it.group === g.key)
+                  .map((it) => (
+                    <button
+                      key={it.id}
+                      type="button"
+                      className={`avail-toggle ${it.available ? "on" : "off"}`}
+                      onClick={() =>
+                        gear.update(it.id, { available: !it.available })
+                      }
+                    >
+                      {it.label}
+                    </button>
+                  ))}
+              </div>
             </div>
           ))}
         </div>
