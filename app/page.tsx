@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Session, SESSION_LABELS, TeeTime } from "@/lib/types";
+import { Session, SESSION_LABELS, TeeTime, GearItem } from "@/lib/types";
 import { getSessions, computeStreak } from "@/lib/storage";
 import { isCloudEnabled } from "@/lib/supabaseClient";
 import { Focus } from "@/lib/types";
-import { useObject, useStringList } from "@/lib/store";
+import { useObject, useStringList, useCollection } from "@/lib/store";
 import { EditableText } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
-import { FOCUS, PROFILE, NEXT_STEPS, TEE_TIME } from "@/lib/seed";
+import { FOCUS, PROFILE, NEXT_STEPS, TEE_TIME, GEAR } from "@/lib/seed";
 import { dayTasks, isoLocal, dowIndex, PLAN, mondayOf } from "@/lib/plan";
 import { CoachContext } from "@/lib/coach";
 
@@ -44,6 +44,7 @@ export default function Dashboard() {
   const focus = useObject<Focus>("focus", FOCUS);
   const plan = useObject<Record<string, number[]>>("plan", PLAN);
   const nextSteps = useStringList("nextSteps", NEXT_STEPS);
+  const gear = useCollection<GearItem>("gear", GEAR);
   const briefing = useObject<{ date: string; text: string }>("dailyBriefing", {
     date: "",
     text: "",
@@ -77,7 +78,7 @@ export default function Dashboard() {
       plan: plan.value,
       clubs: [],
       equipment: [],
-      gear: [],
+      gear: gear.items.map((g) => ({ id: g.id, label: g.label, group: g.group, available: g.available })),
       nextSteps: nextSteps.items,
       recentSessions: sessions.slice(0, 5).map((s) => ({
         date: s.date,
