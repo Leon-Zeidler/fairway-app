@@ -16,6 +16,9 @@ describe("normalizeStep", () => {
     const s: Step = { name: "A", detail: "B", club: "7 Eisen", dose: "10" };
     expect(normalizeStep(s)).toEqual(s);
   });
+  it("behandelt einen leeren String", () => {
+    expect(normalizeStep("")).toEqual({ name: "", detail: "" });
+  });
 });
 
 describe("gearRecord", () => {
@@ -44,28 +47,34 @@ describe("resolveSteps", () => {
   ];
 
   it("zeigt Schritte ohne gear als ok", () => {
-    const r = resolveSteps(steps, { cable: true, "pull-up-bar": true } as any);
+    const r = resolveSteps(steps, { cable: true, "pull-up-bar": true });
     expect(r[0].status).toBe("ok");
     expect(r[0].step.name).toBe("Squat");
   });
   it("tauscht auf alt, wenn gear fehlt und alt vorhanden ist", () => {
-    const r = resolveSteps(steps, { cable: false, "pull-up-bar": true } as any);
+    const r = resolveSteps(steps, { cable: false, "pull-up-bar": true });
     expect(r[1].status).toBe("adapted");
     expect(r[1].step.name).toBe("Standing Rotation");
   });
   it("markiert unavailable, wenn gear fehlt und kein alt da ist", () => {
-    const r = resolveSteps(steps, { cable: true, "pull-up-bar": false } as any);
+    const r = resolveSteps(steps, { cable: true, "pull-up-bar": false });
     expect(r[2].status).toBe("unavailable");
     expect(r[2].step.name).toBe("Klimmzug");
   });
   it("behandelt fehlenden Eintrag (undefined) wie verfügbar", () => {
-    const r = resolveSteps([steps[1]], {} as any);
+    const r = resolveSteps([steps[1]], {});
     expect(r[0].status).toBe("ok");
+  });
+  it("gibt bei leerer Liste ein leeres Array zurück", () => {
+    expect(resolveSteps([], {})).toEqual([]);
   });
 });
 
 describe("GEAR_IDS", () => {
-  it("enthält genau 9 Material-IDs", () => {
-    expect(GEAR_IDS).toHaveLength(9);
+  it("enthält genau die 9 bekannten Material-IDs", () => {
+    expect(GEAR_IDS).toEqual([
+      "foam-roller", "band", "barbell", "dumbbells",
+      "pull-up-bar", "bench", "cable", "kettlebell", "med-ball",
+    ]);
   });
 });

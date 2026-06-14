@@ -20,7 +20,7 @@ export const GEAR_IDS: GearId[] = [
 
 /** Wandelt das alte String-Format ("Name — Detail") in einen Step. Idempotent. */
 export function normalizeStep(s: string | Step): Step {
-  if (typeof s !== "string") return s;
+  if (typeof s !== "string") return { ...s };
   const [name, ...rest] = s.split(" — ");
   return { name: name.trim(), detail: rest.join(" — ").trim() };
 }
@@ -41,7 +41,7 @@ export function gearRecord(items: GearItem[]): Record<GearId, boolean> {
  */
 export function resolveSteps(
   steps: Step[],
-  gear: Record<GearId, boolean>
+  gear: Partial<Record<GearId, boolean>>
 ): { step: Step; status: StepStatus }[] {
   return steps.map((step) => {
     if (!step.gear || gear[step.gear] !== false) return { step, status: "ok" as const };
