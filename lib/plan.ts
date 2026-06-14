@@ -83,19 +83,18 @@ export interface DayTask {
   href?: string; // wo die Anleitung liegt
 }
 
-// Mobility-Rotation über die Woche (Tag 5 = Pivot-Fokus, 2× pro Woche).
-// [Titel, Beschreibung, Programm-Id]
-const MOBILITY_BY_DOW: Record<number, [string, string, string]> = {
-  0: ["Mobility · Rotation & Wirbelsäule", "Tag 1 · 10 Min — Drehung freimachen", "mob1"],
-  1: ["Mobility · Hüfte & Gesäß", "Tag 2 · 10 Min — Basis gegen Aufrichten", "mob2"],
-  2: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix", "mob5"],
-  3: ["Mobility · Schultern & Brust", "Tag 3 · 10 Min — freier Schulter-Turn", "mob3"],
-  4: ["Mobility · Pivot (Fokus)", "Tag 5 · 10 Min — direkt für deinen Swing-Path-Fix", "mob5"],
-  5: ["Mobility · Hüfte kurz", "Tag 2 · 5 Min — vor der Runde lockern", "mob2"],
-  6: ["Mobility · Recovery", "Tag 4 · 10 Min — Ganzkörper lockern", "mob4"],
+// Rory-Fitness: fester 7-Tage-Rhythmus (Gym laeuft am selben Tag wie Golf).
+const RORY_BY_DOW: Record<number, DayTask> = {
+  0: { key: "gym", title: "Rory · Strength A (schwer)", desc: "Trap-Bar, Klimmzuege, Lunges + Mobility-Warmup", href: "/programm/rory-strength-a" },
+  1: { key: "gym", title: "Rory · Strength B (Oberkoerper/Core)", desc: "Schraegbank-Druecken, Renegade Row, Rotation", href: "/programm/rory-strength-b" },
+  2: { key: "gym", title: "Rory · Power/Speed", desc: "Box Jumps, Med-Ball-Power, schnelle Lifts", href: "/programm/rory-power" },
+  3: { key: "gym", title: "Rory · Strength-Endurance-Zirkel", desc: "2 Zirkel je 3 Runden", href: "/programm/rory-circuit" },
+  4: { key: "gym", title: "Rory · Conditioning", desc: "5K-Lauf/Intervalle + Core", href: "/programm/rory-conditioning" },
+  5: { key: "gym", title: "Rory · Activation (vor der Runde)", desc: "kurzer Aktivierungs-Zirkel", href: "/programm/rory-activation" },
+  6: { key: "mobility", title: "Rory · Recovery", desc: "Foam Roll, Mobility, aktive Erholung", href: "/programm/rory-recovery" },
 };
 
-/** Konkrete Aufgaben für einen Wochentag (0 = Mo). Plan ist KI-/nutzeränderbar. */
+/** Konkrete Aufgaben fuer einen Wochentag (0 = Mo). Rory-Fitness fix, Golf plan-gesteuert. */
 export function dayTasks(
   dow: number,
   plan: Record<string, number[]> = PLAN
@@ -103,21 +102,16 @@ export function dayTasks(
   const tasks: DayTask[] = [];
   const on = (key: string) => (plan[key] ?? PLAN[key] ?? []).includes(dow);
 
-  if (on("mobility")) {
-    const [mTitle, mDesc, mProg] = MOBILITY_BY_DOW[dow];
-    tasks.push({
-      key: "mobility",
-      title: mTitle,
-      desc: mDesc,
-      href: `/programm/${mProg}`,
-    });
-  }
+  // Rory-Fitness: jeden Tag die passende Session (fest verdrahtet).
+  const rory = RORY_BY_DOW[dow];
+  if (rory) tasks.push(rory);
 
+  // Golf bleibt nutzer-/coach-gesteuert ueber den Wochenplan - am selben Tag.
   if (on("technik")) {
     tasks.push({
       key: "technik",
-      title: "Range · geführtes Programm",
-      desc: "Swing Path → Driver → Basics · 60 Bälle reichen",
+      title: "Range · gefuehrtes Programm",
+      desc: "Swing Path -> Driver -> Basics · 60 Baelle reichen",
       href: "/programm/range",
     });
   }
@@ -125,23 +119,15 @@ export function dayTasks(
     tasks.push({
       key: "kurzspiel",
       title: "Kurzspiel · 15 Min",
-      desc: "Chippen & Pitchen — ruhige Hände, Landepunkt wählen",
+      desc: "Chippen und Pitchen - ruhige Haende, Landepunkt waehlen",
       href: "/programm/kurzspiel",
-    });
-  }
-  if (on("gym")) {
-    tasks.push({
-      key: "gym",
-      title: dow === 0 ? "Gym · Rumpf — Rotation" : "Gym · Beine — Squat Power",
-      desc: "Geführtes Workout mit Sätzen & Wiederholungen",
-      href: dow === 0 ? "/programm/gym2" : "/programm/gym1",
     });
   }
   if (on("platz")) {
     tasks.push({
       key: "platz",
       title: "Platz · Runde spielen",
-      desc: "Prozess vor Score — ein Gedanke pro Schwung, Driver nur wenn sicher",
+      desc: "Prozess vor Score - ein Gedanke pro Schwung, Driver nur wenn sicher",
     });
   }
   return tasks;
