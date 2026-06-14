@@ -616,6 +616,32 @@ textarea {
   color: var(--green-ink);
   background: var(--green-soft);
 }
+.step-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.step-badge.adapted {
+  color: var(--amber);
+  background: #faf3e1;
+}
+.step-badge.unavailable {
+  color: var(--red);
+  background: var(--red-soft);
+}
+.drill.blocked {
+  opacity: 0.55;
+}
+.drill.blocked .d-name {
+  color: var(--faint);
+}
 
 /* ── Key-Value-Rows (Distanzen) ─────────────────────────────────── */
 

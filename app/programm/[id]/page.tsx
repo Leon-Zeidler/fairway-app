@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Session } from "@/lib/types";
+import { Session, GearItem } from "@/lib/types";
 import { addSession } from "@/lib/storage";
-import { uid, useObject } from "@/lib/store";
+import { uid, useObject, useCollection } from "@/lib/store";
+import { GEAR } from "@/lib/seed";
+import { gearRecord, resolveSteps } from "@/lib/gear";
 import {
   resolveProgram,
   DEMO_SUFFIX,
@@ -14,12 +16,18 @@ import { isoLocal } from "@/lib/plan";
 import { ExerciseVideo } from "@/app/components/ExerciseVideo";
 import Icon from "@/app/components/Icon";
 
+function gearLabel(id?: string): string {
+  return GEAR.find((g) => g.id === id)?.label ?? "Material";
+}
+
 type WeekLog = Record<string, string[]>;
 
 export default function ProgramPage({ params }: { params: { id: string } }) {
   const overrides = useObject<ProgramOverrides>("programOverrides", {});
   const program = resolveProgram(params.id, overrides.value);
   const log = useObject<WeekLog>("weekLog", {});
+  const gear = useCollection<GearItem>("gear", GEAR);
+  const gearRec = gearRecord(gear.items);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState(false);
 
@@ -42,7 +50,13 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
     );
   }
 
-  const total = program.sections.reduce((n, s) => n + s.steps.length, 0);
+  const total = program.sections.reduce(
+    (n, s) =>
+      n +
+      resolveSteps(s.steps, gearRec).filter((r) => r.status !== "unavailable")
+        .length,
+    0
+  );
 
   function toggle(id: string) {
     setChecked((prev) => {
@@ -87,37 +101,59 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
       </header>
 
       <div className="container">
-        {program.sections.map((sec, si) => (
-          <div className="card" key={si}>
-            {sec.title && <h2>{sec.title}</h2>}
-            {sec.steps.map((step, i) => {
-              const id = `${si}-${i}`;
-              const on = checked.has(id);
-              return (
-                <div className={`drill ${on ? "done" : ""}`} key={id}>
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    onChange={() => toggle(id)}
-                  />
-                  <span style={{ flex: 1 }}>
-                    <span className="d-name">{step.name}</span>
-                    {(step.club || step.dose) && (
-                      <span className="step-tags">
-                        {step.club && <span className="step-tag club">{step.club}</span>}
-                        {step.dose && <span className="step-tag dose">{step.dose}</span>}
-                      </span>
-                    )}
-                    {step.detail && <div className="d-detail">{step.detail}</div>}
-                    <ExerciseVideo
-                      query={`${step.name} ${DEMO_SUFFIX[program.group]}`}
+        {program.sections.map((sec, si) => {
+          const resolved = resolveSteps(sec.steps, gearRec);
+          return (
+            <div className="card" key={si}>
+              {sec.title && <h2>{sec.title}</h2>}
+              {resolved.map(({ step, status }, i) => {
+                const id = `${si}-${i}`;
+                const blocked = status === "unavailable";
+                const on = checked.has(id);
+                return (
+                  <div
+                    className={`drill ${on ? "done" : ""} ${blocked ? "blocked" : ""}`}
+                    key={id}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={blocked}
+                      onChange={() => toggle(id)}
                     />
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                    <span style={{ flex: 1 }}>
+                      <span className="d-name">{step.name}</span>
+                      {status === "adapted" && (
+                        <span className="step-badge adapted">angepasst</span>
+                      )}
+                      {status === "unavailable" && (
+                        <span className="step-badge unavailable">
+                          braucht {gearLabel(step.gear)}
+                        </span>
+                      )}
+                      {(step.club || step.dose) && (
+                        <span className="step-tags">
+                          {step.club && (
+                            <span className="step-tag club">{step.club}</span>
+                          )}
+                          {step.dose && (
+                            <span className="step-tag dose">{step.dose}</span>
+                          )}
+                        </span>
+                      )}
+                      {step.detail && <div className="d-detail">{step.detail}</div>}
+                      {!blocked && (
+                        <ExerciseVideo
+                          query={`${step.name} ${DEMO_SUFFIX[program.group]}`}
+                        />
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
 
         <div className="card">
           <h2>Fertig?</h2>
