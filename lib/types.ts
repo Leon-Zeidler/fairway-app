@@ -115,7 +115,8 @@ export type GearId =
   | "bench"
   | "cable"
   | "kettlebell"
-  | "med-ball";
+  | "med-ball"
+  | "box";
 
 /** Ein strukturierter Übungsschritt (ersetzt das "Name — Detail"-Format). */
 export interface Step {

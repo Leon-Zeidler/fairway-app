@@ -541,4 +541,5 @@ export const GEAR: GearItem[] = [
   { id: "cable", label: "Kabelzug", group: "gym", available: true },
   { id: "kettlebell", label: "Kettlebell", group: "gym", available: true },
   { id: "med-ball", label: "Med-Ball", group: "gym", available: true },
+  { id: "box", label: "Sprungbox / Step", group: "gym", available: true },
 ];

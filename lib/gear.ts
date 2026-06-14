@@ -16,6 +16,7 @@ export const GEAR_IDS: GearId[] = [
   "cable",
   "kettlebell",
   "med-ball",
+  "box",
 ];
 
 /** Wandelt das alte String-Format ("Name — Detail") in einen Step. Idempotent. */

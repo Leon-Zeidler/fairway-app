@@ -71,10 +71,10 @@ describe("resolveSteps", () => {
 });
 
 describe("GEAR_IDS", () => {
-  it("enthält genau die 9 bekannten Material-IDs", () => {
+  it("enthält genau die 10 bekannten Material-IDs", () => {
     expect(GEAR_IDS).toEqual([
       "foam-roller", "band", "barbell", "dumbbells",
-      "pull-up-bar", "bench", "cable", "kettlebell", "med-ball",
+      "pull-up-bar", "bench", "cable", "kettlebell", "med-ball", "box",
     ]);
   });
 });

@@ -41,8 +41,8 @@ describe("seed content invariants", () => {
       }
   });
 
-  it("GEAR enthält 9 Einträge mit gültigen IDs", () => {
-    expect(GEAR).toHaveLength(9);
+  it("GEAR enthält 10 Einträge mit gültigen IDs", () => {
+    expect(GEAR).toHaveLength(10);
     for (const g of GEAR) expect(GEAR_IDS).toContain(g.id);
     for (const id of GEAR_IDS) expect(GEAR.map((g) => g.id)).toContain(id);
   });
