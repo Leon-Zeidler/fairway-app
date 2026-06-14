@@ -109,3 +109,35 @@ export interface Focus {
   why: string;
   cues: string[];
 }
+
+/* ── Strukturierte Übungsschritte & Trainings-Material ──────────────── */
+
+/** Material-Kürzel für Mobility/Gym-Übungen. */
+export type GearId =
+  | "foam-roller"
+  | "band"
+  | "barbell"
+  | "dumbbells"
+  | "pull-up-bar"
+  | "bench"
+  | "cable"
+  | "kettlebell"
+  | "med-ball";
+
+/** Ein strukturierter Übungsschritt (ersetzt das "Name — Detail"-Format). */
+export interface Step {
+  name: string;
+  detail: string;
+  club?: string; // "7 Eisen" — nur Golf/Range/Kurzspiel
+  dose?: string; // "15 Bälle" | "10 Wdh." | "3×8" | "45 s/Seite"
+  gear?: GearId; // benötigtes Material; fehlt → keins nötig
+  alt?: Omit<Step, "alt">; // Variante, wenn `gear` nicht verfügbar ist
+}
+
+/** Ein Material-Eintrag im Trainings-Inventar. */
+export interface GearItem {
+  id: GearId;
+  label: string;
+  group: "mobility" | "gym";
+  available: boolean;
+}
