@@ -28,6 +28,10 @@ describe("seed content invariants", () => {
       if (step.club !== undefined) expect(step.club.length).toBeGreaterThan(0);
   });
 
+  it("jeder Schritt hat nicht-leeren Detail-Text", () => {
+    for (const { step } of allSteps()) expect(step.detail.length, step.name).toBeGreaterThan(0);
+  });
+
   it("jeder gear-Verweis ist gültig UND hat eine alt-Variante", () => {
     for (const { step } of allSteps())
       if (step.gear) {
@@ -40,5 +44,6 @@ describe("seed content invariants", () => {
   it("GEAR enthält 9 Einträge mit gültigen IDs", () => {
     expect(GEAR).toHaveLength(9);
     for (const g of GEAR) expect(GEAR_IDS).toContain(g.id);
+    for (const id of GEAR_IDS) expect(GEAR.map((g) => g.id)).toContain(id);
   });
 });

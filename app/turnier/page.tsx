@@ -185,7 +185,7 @@ export default function Turnier() {
                       {s.dose && <span className="step-tag dose">{s.dose}</span>}
                     </span>
                   )}
-                  {s.detail && <span className="d-detail" style={{ marginTop: 3, display: "block" }}>{s.detail}</span>}
+                  {s.detail && <div className="d-detail">{s.detail}</div>}
                 </span>
               </div>
             );
