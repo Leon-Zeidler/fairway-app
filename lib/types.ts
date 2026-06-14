@@ -53,13 +53,6 @@ export interface EquipItem {
   routineTag?: string; // Kürzel zum Abgleich mit der Turnier-Routine, z.B. "52°"
 }
 
-/** Ein einzelner Drill. */
-export interface Drill {
-  id: string;
-  name: string;
-  detail: string;
-}
-
 export type RoutineGroup = "mobility" | "golf" | "gym";
 
 export const ROUTINE_GROUP_LABELS: Record<RoutineGroup, string> = {
@@ -74,7 +67,7 @@ export interface Routine {
   group: RoutineGroup;
   title: string;
   focus: string; // kurze Beschreibung des Fokus
-  steps: string[];
+  steps: Step[];
   current?: boolean; // aktueller Fokus (hebt die Routine hervor)
 }
 

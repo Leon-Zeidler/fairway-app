@@ -11,7 +11,6 @@ import {
   ProgramOverrides,
 } from "@/lib/programs";
 import { isoLocal } from "@/lib/plan";
-import { exerciseName } from "@/app/components/ui";
 import { ExerciseVideo } from "@/app/components/ExerciseVideo";
 import Icon from "@/app/components/Icon";
 
@@ -94,7 +93,6 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
             {sec.steps.map((step, i) => {
               const id = `${si}-${i}`;
               const on = checked.has(id);
-              const [name, ...rest] = step.split(" — ");
               return (
                 <div className={`drill ${on ? "done" : ""}`} key={id}>
                   <input
@@ -103,12 +101,16 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
                     onChange={() => toggle(id)}
                   />
                   <span style={{ flex: 1 }}>
-                    <span className="d-name">{name}</span>
-                    {rest.length > 0 && (
-                      <div className="d-detail">{rest.join(" — ")}</div>
+                    <span className="d-name">{step.name}</span>
+                    {(step.club || step.dose) && (
+                      <span className="step-tags">
+                        {step.club && <span className="step-tag club">{step.club}</span>}
+                        {step.dose && <span className="step-tag dose">{step.dose}</span>}
+                      </span>
                     )}
+                    {step.detail && <div className="d-detail">{step.detail}</div>}
                     <ExerciseVideo
-                      query={`${exerciseName(name)} ${DEMO_SUFFIX[program.group]}`}
+                      query={`${step.name} ${DEMO_SUFFIX[program.group]}`}
                     />
                   </span>
                 </div>

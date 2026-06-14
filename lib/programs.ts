@@ -3,13 +3,14 @@
 // und hakt die zugehörige Aktivität im Wochen-Log ab.
 
 import { DRILLS, PITCHING, ROUTINES } from "./seed";
-import { Routine, SessionType } from "./types";
+import { Routine, SessionType, Step } from "./types";
+import { normalizeStep } from "./gear";
 
 export type ActivityKey = "mobility" | "technik" | "kurzspiel" | "gym" | "platz";
 
 export interface ProgramSection {
   title?: string;
-  steps: string[]; // "Name — Detail"
+  steps: Step[]; // strukturierte Schritte
 }
 
 export interface Program {
@@ -45,7 +46,7 @@ export const PROGRAMS: Program[] = [
       { title: "2 · Driver — Topping & Haltung", steps: routine("golf3").steps },
       {
         title: "Basics · Reverse Pivot (2–3 als Aufwärmen)",
-        steps: DRILLS.map((d) => `${d.name} — ${d.detail}`),
+        steps: DRILLS,
       },
     ],
   },
@@ -95,10 +96,20 @@ export function getProgram(id: string): Program | undefined {
 export interface ProgramOverride {
   title?: string;
   focus?: string;
-  sections?: ProgramSection[];
+  sections?: { title?: string; steps: (string | Step)[] }[];
 }
 
 export type ProgramOverrides = Record<string, ProgramOverride>;
+
+/** Macht aus evtl. alten String-Steps strukturierte Steps. */
+export function normalizeSections(
+  sections: { title?: string; steps: (string | Step)[] }[]
+): ProgramSection[] {
+  return sections.map((s) => ({
+    title: s.title,
+    steps: s.steps.map(normalizeStep),
+  }));
+}
 
 export function applyOverride(p: Program, ov?: ProgramOverride): Program {
   if (!ov) return p;
@@ -106,7 +117,7 @@ export function applyOverride(p: Program, ov?: ProgramOverride): Program {
     ...p,
     title: ov.title ?? p.title,
     focus: ov.focus ?? p.focus,
-    sections: ov.sections ?? p.sections,
+    sections: ov.sections ? normalizeSections(ov.sections) : p.sections,
   };
 }
 

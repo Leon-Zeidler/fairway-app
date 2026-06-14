@@ -1,7 +1,7 @@
 // Geteilte Typen & Prompt-Bausteine für den KI-Coach.
 // Der OpenAI-Key lebt NUR serverseitig (app/api/coach/route.ts).
 
-import { Profile } from "./types";
+import { Profile, Step } from "./types";
 
 export type ActivityKey =
   | "mobility"
@@ -90,7 +90,7 @@ export interface CoachContext {
     id: string;
     title: string;
     group: string;
-    sections: { title?: string; steps: string[] }[];
+    sections: { title?: string; steps: Step[] }[];
   }[];
   warmup: { club: string; balls: number; detail: string }[];
   insights: string[];

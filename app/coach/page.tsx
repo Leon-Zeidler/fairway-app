@@ -28,6 +28,7 @@ import {
   resolveProgram,
   ProgramOverrides,
 } from "@/lib/programs";
+import { normalizeStep } from "@/lib/gear";
 import {
   ChatMessage,
   CoachAction,
@@ -294,7 +295,14 @@ export default function Coach() {
       }
       case "set_program":
         overrides.set({
-          [a.id]: { title: a.title, focus: a.focus, sections: a.sections },
+          [a.id]: {
+            title: a.title,
+            focus: a.focus,
+            sections: a.sections.map((s) => ({
+              title: s.title,
+              steps: s.steps.map(normalizeStep),
+            })),
+          },
         });
         break;
       case "add_program_step": {
@@ -304,8 +312,9 @@ export default function Coach() {
             ...s,
             steps: [...s.steps],
           }));
-          if (sections.length) sections[sections.length - 1].steps.push(a.step);
-          else sections.push({ steps: [a.step] });
+          const step = normalizeStep(a.step);
+          if (sections.length) sections[sections.length - 1].steps.push(step);
+          else sections.push({ steps: [step] });
           overrides.set({
             [a.id]: { ...overrides.value[a.id], sections },
           });

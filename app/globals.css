@@ -590,6 +590,33 @@ textarea {
   line-height: 1.5;
 }
 
+/* Schläger/Dosis-Tags an Übungen */
+.step-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.step-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.step-tag.club {
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+}
+.step-tag.dose {
+  color: var(--green-ink);
+  background: var(--green-soft);
+}
+
 /* ── Key-Value-Rows (Distanzen) ─────────────────────────────────── */
 
 .kv-row {

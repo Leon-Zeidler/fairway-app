@@ -74,7 +74,7 @@ export default function Turnier() {
   }
 
   const pitchingMissing = unavailableTags.filter((tag) =>
-    PITCHING.some((s) => s.includes(tag))
+    PITCHING.some((s) => s.club === tag || s.detail.includes(tag))
   );
 
   return (
@@ -178,9 +178,14 @@ export default function Turnier() {
               <div className={`drill ${on ? "done" : ""}`} key={id}>
                 <input type="checkbox" checked={on} onChange={() => toggle(id)} />
                 <span style={{ flex: 1 }}>
-                  <span className="d-detail" style={{ marginTop: 0 }}>
-                    {s}
-                  </span>
+                  <span className="d-name">{s.name}</span>
+                  {(s.club || s.dose) && (
+                    <span className="step-tags">
+                      {s.club && <span className="step-tag club">{s.club}</span>}
+                      {s.dose && <span className="step-tag dose">{s.dose}</span>}
+                    </span>
+                  )}
+                  {s.detail && <span className="d-detail" style={{ marginTop: 3, display: "block" }}>{s.detail}</span>}
                 </span>
               </div>
             );
