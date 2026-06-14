@@ -8,6 +8,7 @@ import {
   GearItem,
   Profile,
   Session,
+  Step,
   TeeTime,
 } from "@/lib/types";
 import { useCollection, useObject, useStringList, uid } from "@/lib/store";
@@ -30,7 +31,6 @@ import {
   resolveProgram,
   ProgramOverrides,
 } from "@/lib/programs";
-import { normalizeStep } from "@/lib/gear";
 import {
   ChatMessage,
   CoachAction,
@@ -51,6 +51,7 @@ interface UndoToken {
     equip: EquipItem[];
     weekLog: Record<string, string[]>;
     overrides: ProgramOverrides;
+    gear: GearItem[];
   };
   createdSessions: string[];
 }
@@ -67,6 +68,19 @@ const SUGGESTIONS = [
   "Pass meinen Wochenplan an, ich hab nur 3 Tage Zeit.",
   "Welchen Schläger nehme ich vom engen Tee?",
 ];
+
+/** Globalen (über alle Sections fortlaufenden) Step-Index lokalisieren. */
+function locateStep(
+  sections: { steps: unknown[] }[],
+  index: number
+): { si: number; i: number } | null {
+  let n = index;
+  for (let si = 0; si < sections.length; si++) {
+    if (n < sections[si].steps.length) return { si, i: n };
+    n -= sections[si].steps.length;
+  }
+  return null;
+}
 
 export default function Coach() {
   const focus = useObject<Focus>("focus", FOCUS);
@@ -197,6 +211,7 @@ export default function Coach() {
       equip: equip.items,
       weekLog: weekLog.value,
       overrides: overrides.value,
+      gear: gear.items,
     };
     const createdSessions: string[] = [];
     actions.forEach((a) => applyOne(a, createdSessions));
@@ -214,6 +229,7 @@ export default function Coach() {
     equip.setAll(s.equip);
     weekLog.replace(s.weekLog);
     overrides.replace(s.overrides);
+    gear.setAll(s.gear);
     token.createdSessions.forEach((id) => void deleteSession(id));
     setMsgs((m) =>
       m.map((x, i) => (i === index ? { ...x, undone: true, undo: undefined } : x))
@@ -307,10 +323,7 @@ export default function Coach() {
           [a.id]: {
             title: a.title,
             focus: a.focus,
-            sections: a.sections.map((s) => ({
-              title: s.title,
-              steps: s.steps.map(normalizeStep),
-            })),
+            sections: a.sections.map((s) => ({ title: s.title, steps: s.steps })),
           },
         });
         break;
@@ -321,13 +334,57 @@ export default function Coach() {
             ...s,
             steps: [...s.steps],
           }));
-          const step = normalizeStep(a.step);
-          if (sections.length) sections[sections.length - 1].steps.push(step);
-          else sections.push({ steps: [step] });
-          overrides.set({
-            [a.id]: { ...overrides.value[a.id], sections },
-          });
+          if (sections.length) sections[sections.length - 1].steps.push(a.step);
+          else sections.push({ steps: [a.step] });
+          overrides.set({ [a.id]: { ...overrides.value[a.id], sections } });
         }
+        break;
+      }
+      case "edit_program_step": {
+        const resolved = resolveProgram(a.id, overrides.value);
+        if (resolved) {
+          const sections = resolved.sections.map((s) => ({
+            ...s,
+            steps: [...s.steps],
+          }));
+          const loc = locateStep(sections, a.index);
+          if (loc) {
+            const cur = sections[loc.si].steps[loc.i];
+            const patch: Step = { ...cur };
+            if (a.name !== undefined) patch.name = a.name;
+            if (a.detail !== undefined) patch.detail = a.detail;
+            if (a.club !== undefined) patch.club = a.club;
+            if (a.dose !== undefined) patch.dose = a.dose;
+            if (a.gear !== undefined) patch.gear = a.gear;
+            sections[loc.si].steps[loc.i] = patch;
+            overrides.set({ [a.id]: { ...overrides.value[a.id], sections } });
+          }
+        }
+        break;
+      }
+      case "remove_program_step": {
+        const resolved = resolveProgram(a.id, overrides.value);
+        if (resolved) {
+          const sections = resolved.sections.map((s) => ({
+            ...s,
+            steps: [...s.steps],
+          }));
+          const loc = locateStep(sections, a.index);
+          if (loc) {
+            sections[loc.si].steps.splice(loc.i, 1);
+            overrides.set({ [a.id]: { ...overrides.value[a.id], sections } });
+          }
+        }
+        break;
+      }
+      case "set_gear": {
+        const needle = a.match.toLowerCase();
+        const item = gear.items.find(
+          (g) =>
+            g.id.toLowerCase().includes(needle) ||
+            g.label.toLowerCase().includes(needle)
+        );
+        if (item) gear.update(item.id, { available: a.available });
         break;
       }
     }

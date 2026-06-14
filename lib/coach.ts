@@ -1,7 +1,8 @@
 // Geteilte Typen & Prompt-Bausteine für den KI-Coach.
 // Der OpenAI-Key lebt NUR serverseitig (app/api/coach/route.ts).
 
-import { Profile, Step } from "./types";
+import { GearId, Profile, Step } from "./types";
+import { GEAR_IDS } from "./gear";
 
 export type ActivityKey =
   | "mobility"
@@ -53,9 +54,21 @@ export type CoachAction =
       id: string;
       title?: string;
       focus?: string;
-      sections: { title?: string; steps: string[] }[];
+      sections: { title?: string; steps: Step[] }[];
     }
-  | { type: "add_program_step"; id: string; step: string };
+  | { type: "add_program_step"; id: string; step: Step }
+  | {
+      type: "edit_program_step";
+      id: string;
+      index: number;
+      name?: string;
+      detail?: string;
+      club?: string;
+      dose?: string;
+      gear?: GearId;
+    }
+  | { type: "remove_program_step"; id: string; index: number }
+  | { type: "set_gear"; match: string; available: boolean };
 
 export interface CoachResponse {
   reply: string;
@@ -138,17 +151,28 @@ Verfügbare Aktionen (nur diese, exakt dieses Schema):
 - {"type":"complete_today","activities":["mobility","technik"]}
   Hakt heute Aktivitäten im Wochenplan als erledigt ab.
 
-- {"type":"set_program","id":"range","title":"...","focus":"...","sections":[{"title":"1 · ...","steps":["Übung — Detail","..."]}]}
-  Schreibt ein ganzes Programm/Workout neu (Schritte als "Name — Detail"). "id" aus dem programs-Kontext (z.B. range, kurzspiel, mob1..mob5, gym1..gym4). Behalte die Section-Struktur sinnvoll.
+- {"type":"set_program","id":"range","title":"...","focus":"...","sections":[{"title":"1 · ...","steps":[{"name":"Gate-Drill","detail":"...","club":"7 Eisen","dose":"15 Bälle"}]}]}
+  Schreibt ein ganzes Programm/Workout neu. Schritte sind OBJEKTE: name (Pflicht), detail, club (nur Golf), dose ("15 Bälle"/"3×8"/"45 s/Seite"), gear (eines von: ${GEAR_IDS.join(", ")}). "id" aus dem programs-Kontext (range, kurzspiel, mob1..mob5, golf1..golf3, gym1..gym4).
 
-- {"type":"add_program_step","id":"gym1","step":"Hip Thrust — 3×10"}
-  Hängt EINE Übung an ein Programm an.
+- {"type":"add_program_step","id":"gym1","step":{"name":"Hip Thrust","detail":"...","dose":"3×10"}}
+  Hängt EINEN strukturierten Schritt an ein Programm an.
+
+- {"type":"edit_program_step","id":"gym1","index":2,"dose":"4×10"}
+  Ändert EINEN Schritt gezielt. "index" = globale Position im Programm (über alle Sections, 0-basiert, wie im Kontext gelistet). Nur die zu ändernden Felder angeben (name/detail/club/dose/gear).
+
+- {"type":"remove_program_step","id":"gym1","index":4}
+  Löscht EINEN Schritt (globaler Index wie oben).
+
+- {"type":"set_gear","match":"band","available":true}
+  Setzt Trainings-Material auf vorhanden/nicht vorhanden. "match" = Teil von id/Label (z.B. "band","langhantel","kabel").
 
 Regeln für actions:
-- Sei proaktiv: Wenn der Nutzer z.B. von einer Runde/Range-Session erzählt, biete an, sie zu loggen (log_session). Wenn er sagt "52° ist da", set_equipment available=true. Wenn er ein neues Gefühl/Problem schildert, passe Fokus & Plan an.
-- Du darfst mehrere Aktionen in einem Schritt vorschlagen.
-- Wenn unsicher, frage lieber im "reply" nach, statt zu raten. Leere "actions": [] ist völlig ok.
-- Erfinde keine Werte. Greife auf den Kontext zurück. Erhalte bestehende Plan-Tage, wenn nur kleine Anpassungen gewünscht sind (nicht aus Versehen Mobility von täglich auf wenige Tage reduzieren).
+- Bei Golf-/Range-Übungen IMMER club + dose angeben. Bei Mobility/Gym dose angeben (kein club).
+- Schlage NIE Übungen mit einem gear vor, das laut context.gear available:false ist — biete eine Variante ohne Gerät an oder, wenn der Nutzer es jetzt hat, set_gear available:true.
+- Für KLEINE Änderungen nutze edit_program_step/remove_program_step (nicht das ganze Programm via set_program neu schreiben).
+- Sei proaktiv: erzählt der Nutzer von einer Runde/Range-Session, biete log_session an. Sagt er "52° ist da", set_equipment available=true. Neues Problem → Fokus & Plan anpassen.
+- Du darfst mehrere Aktionen in einem Schritt vorschlagen. Wenn unsicher, frage im "reply" nach. Leere "actions": [] ist ok.
+- Erfinde keine Werte. Greife auf den Kontext zurück. Erhalte bestehende Plan-Tage bei kleinen Anpassungen (Mobility nicht versehentlich von täglich reduzieren).
 `.trim();
 
 export function buildSystemPrompt(ctx: CoachContext): string {
@@ -187,6 +211,29 @@ const strArr = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x) => (x as string).trim()) : [];
 const num = (v: unknown): number | undefined =>
   typeof v === "number" && isFinite(v) ? v : undefined;
+
+const GEAR_ID_SET = new Set<string>(GEAR_IDS);
+const gearId = (v: unknown): GearId | undefined =>
+  typeof v === "string" && GEAR_ID_SET.has(v) ? (v as GearId) : undefined;
+
+/** Säubert ein einzelnes Step-Objekt; null, wenn ohne Namen. */
+function sanitizeStep(v: unknown): Step | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  const name = str(o.name);
+  if (!name) return null;
+  const step: Step = { name, detail: str(o.detail) ?? "" };
+  const club = str(o.club);
+  if (club) step.club = club;
+  const dose = str(o.dose);
+  if (dose) step.dose = dose;
+  const g = gearId(o.gear);
+  if (g) step.gear = g;
+  return step;
+}
+
+const intIndex = (v: unknown): number | undefined =>
+  typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : undefined;
 
 /** Filtert ungültige/halbe Aktionen heraus, damit nie ein kaputter Plan entsteht. */
 export function sanitizeActions(raw: unknown): CoachAction[] {
@@ -269,16 +316,48 @@ export function sanitizeActions(raw: unknown): CoachAction[] {
         const sections = (o.sections as unknown[])
           .map((s) => {
             const sec = s as Record<string, unknown>;
-            return { title: str(sec.title), steps: strArr(sec.steps) };
+            const steps = Array.isArray(sec.steps)
+              ? sec.steps.map(sanitizeStep).filter((x): x is Step => x !== null)
+              : [];
+            return { title: str(sec.title), steps };
           })
           .filter((s) => s.steps.length);
-        if (sections.length) out.push({ type: "set_program", id, title: str(o.title), focus: str(o.focus), sections });
+        if (sections.length)
+          out.push({ type: "set_program", id, title: str(o.title), focus: str(o.focus), sections });
         break;
       }
       case "add_program_step": {
         const id = str(o.id);
-        const step = str(o.step);
+        const step = sanitizeStep(o.step);
         if (id && step) out.push({ type: "add_program_step", id, step });
+        break;
+      }
+      case "edit_program_step": {
+        const id = str(o.id);
+        const index = intIndex(o.index);
+        if (!id || index === undefined) break;
+        out.push({
+          type: "edit_program_step",
+          id,
+          index,
+          name: str(o.name),
+          detail: str(o.detail),
+          club: str(o.club),
+          dose: str(o.dose),
+          gear: gearId(o.gear),
+        });
+        break;
+      }
+      case "remove_program_step": {
+        const id = str(o.id);
+        const index = intIndex(o.index);
+        if (id && index !== undefined) out.push({ type: "remove_program_step", id, index });
+        break;
+      }
+      case "set_gear": {
+        const match = str(o.match);
+        if (match && typeof o.available === "boolean")
+          out.push({ type: "set_gear", match, available: o.available });
         break;
       }
     }
@@ -327,7 +406,13 @@ export function describeAction(a: CoachAction): string {
       return `Programm „${a.title ?? a.id}“ neu (${n} Übungen)`;
     }
     case "add_program_step":
-      return `Programm „${a.id}“: + „${a.step}“`;
+      return `Programm „${a.id}”: + „${a.step.name}”`;
+    case "edit_program_step":
+      return `Programm „${a.id}”: Schritt ${a.index + 1} ändern`;
+    case "remove_program_step":
+      return `Programm „${a.id}”: Schritt ${a.index + 1} entfernen`;
+    case "set_gear":
+      return `Material „${a.match}” → ${a.available ? "vorhanden" : "nicht da"}`;
     default:
       return "Änderung";
   }
