@@ -75,6 +75,7 @@ export interface CoachContext {
     status: string;
     available: boolean;
   }[];
+  gear: { id: string; label: string; group: string; available: boolean }[];
   nextSteps: string[];
   recentSessions: {
     date: string;

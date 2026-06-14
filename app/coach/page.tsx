@@ -5,6 +5,7 @@ import {
   Club,
   EquipItem,
   Focus,
+  GearItem,
   Profile,
   Session,
   TeeTime,
@@ -15,6 +16,7 @@ import {
   CLUBS,
   EQUIPMENT,
   FOCUS,
+  GEAR,
   NEXT_STEPS,
   PROFILE,
   TEE_TIME,
@@ -76,6 +78,7 @@ export default function Coach() {
   const nextSteps = useStringList("nextSteps", NEXT_STEPS);
   const weekLog = useObject<Record<string, string[]>>("weekLog", {});
   const overrides = useObject<ProgramOverrides>("programOverrides", {});
+  const gear = useCollection<GearItem>("gear", GEAR);
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -115,6 +118,12 @@ export default function Coach() {
         name: e.name,
         status: e.status,
         available: e.available !== false,
+      })),
+      gear: gear.items.map((g) => ({
+        id: g.id,
+        label: g.label,
+        group: g.group,
+        available: g.available,
       })),
       nextSteps: nextSteps.items,
       recentSessions: sessions.slice(0, 12).map((s) => ({

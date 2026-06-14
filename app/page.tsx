@@ -77,6 +77,7 @@ export default function Dashboard() {
       plan: plan.value,
       clubs: [],
       equipment: [],
+      gear: [],
       nextSteps: nextSteps.items,
       recentSessions: sessions.slice(0, 5).map((s) => ({
         date: s.date,
