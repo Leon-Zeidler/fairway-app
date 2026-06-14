@@ -86,8 +86,8 @@ export interface DayTask {
 
 // Rory-Fitness: fester 7-Tage-Rhythmus (Gym laeuft am selben Tag wie Golf).
 const RORY_BY_DOW: Record<number, DayTask> = {
-  0: { key: "gym", title: "Rory · Strength A (schwer)", desc: "Trap-Bar, Klimmzuege, Lunges + Mobility-Warmup", href: "/programm/rory-strength-a" },
-  1: { key: "gym", title: "Rory · Strength B (Oberkoerper/Core)", desc: "Schraegbank-Druecken, Renegade Row, Rotation", href: "/programm/rory-strength-b" },
+  0: { key: "gym", title: "Rory · Strength A (schwer)", desc: "Trap-Bar, Klimmzüge, Lunges + Mobility-Warmup", href: "/programm/rory-strength-a" },
+  1: { key: "gym", title: "Rory · Strength B (Oberkörper/Core)", desc: "Schrägbank-Drücken, Renegade Row, Rotation", href: "/programm/rory-strength-b" },
   2: { key: "gym", title: "Rory · Power/Speed", desc: "Box Jumps, Med-Ball-Power, schnelle Lifts", href: "/programm/rory-power" },
   3: { key: "gym", title: "Rory · Strength-Endurance-Zirkel", desc: "2 Zirkel je 3 Runden", href: "/programm/rory-circuit" },
   4: { key: "gym", title: "Rory · Conditioning", desc: "5K-Lauf/Intervalle + Core", href: "/programm/rory-conditioning" },

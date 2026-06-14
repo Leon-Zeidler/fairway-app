@@ -78,7 +78,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Strength A (schwer)",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Schwerer Kraftblock - Trap-Bar, Klimmzuege, Lunges (angelehnt an Rory McIlroy)",
+    focus: "Schwerer Kraftblock – Trap-Bar, Klimmzüge, Lunges (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [
@@ -88,10 +88,10 @@ export const PROGRAMS: Program[] = [
   },
   {
     id: "rory-strength-b",
-    title: "Rory · Strength B (Oberkoerper/Core)",
+    title: "Rory · Strength B (Oberkörper/Core)",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Druck/Zug + Core - Schraegbank, Renegade Row, Rotation (angelehnt an Rory McIlroy)",
+    focus: "Druck/Zug + Core – Schrägbank, Renegade Row, Rotation (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [
@@ -104,7 +104,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Power/Speed",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Explosivkraft - Box Jumps, Med-Ball-Power, schnelle Lifts (angelehnt an Rory McIlroy)",
+    focus: "Explosivkraft – Box Jumps, Med-Ball-Power, schnelle Lifts (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [
@@ -117,7 +117,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Strength-Endurance-Zirkel",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Kraftausdauer - zwei Zirkel je 3 Runden (angelehnt an Rory McIlroy)",
+    focus: "Kraftausdauer – zwei Zirkel je 3 Runden (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [
@@ -131,7 +131,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Conditioning",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Ausdauer + Core - Lauf/Intervalle, Carry, Anti-Rotation (angelehnt an Rory McIlroy)",
+    focus: "Ausdauer + Core – Lauf/Intervalle, Carry, Anti-Rotation (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [
@@ -144,7 +144,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Activation (vor der Runde)",
     group: "gym",
     groupLabel: "Rory · Fitness",
-    focus: "Kurz aktivieren, nicht ermueden - vor der Runde (angelehnt an Rory McIlroy)",
+    focus: "Kurz aktivieren, nicht ermüden – vor der Runde (angelehnt an Rory McIlroy)",
     activityKey: "gym",
     sessionType: "gym",
     sections: [{ steps: RORY_ACTIVATION }],
@@ -154,7 +154,7 @@ export const PROGRAMS: Program[] = [
     title: "Rory · Recovery",
     group: "mobility",
     groupLabel: "Rory · Fitness",
-    focus: "Aktive Erholung - Foam Roll, Mobility, Atmung (angelehnt an Rory McIlroy)",
+    focus: "Aktive Erholung – Foam Roll, Mobility, Atmung (angelehnt an Rory McIlroy)",
     activityKey: "mobility",
     sessionType: "stretch",
     sections: [{ steps: RORY_RECOVERY }],
