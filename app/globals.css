@@ -16,6 +16,7 @@
   --dark: #141815; /* CTA-Schwarz */
   --red: #c2412c;
   --red-soft: #faece9;
+  --amber-soft: #faf3e1;
   --amber: #c2941c;
 
   --r-lg: 18px;
@@ -630,7 +631,7 @@ textarea {
 }
 .step-badge.adapted {
   color: var(--amber);
-  background: #faf3e1;
+  background: var(--amber-soft);
 }
 .step-badge.unavailable {
   color: var(--red);

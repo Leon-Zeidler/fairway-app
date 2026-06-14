@@ -58,6 +58,13 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
     0
   );
 
+  const checkedAvailable = program.sections.reduce((n, s, si) => {
+    resolveSteps(s.steps, gearRec).forEach(({ status }, i) => {
+      if (status !== "unavailable" && checked.has(`${si}-${i}`)) n++;
+    });
+    return n;
+  }, 0);
+
   function toggle(id: string) {
     setChecked((prev) => {
       const next = new Set(prev);
@@ -77,7 +84,7 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
       type: program!.sessionType,
       rating: 3,
       drills: Array.from(checked),
-      notes: `${program!.title} (${checked.size}/${total} Übungen)`,
+      notes: `${program!.title} (${checkedAvailable}/${total} Übungen)`,
       createdAt: new Date().toISOString(),
       user_id: null,
     };
@@ -158,13 +165,13 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
         <div className="card">
           <h2>Fertig?</h2>
           <div className="sub">
-            {checked.size} von {total} erledigt. Abschließen speichert die
+            {checkedAvailable} von {total} erledigt. Abschließen speichert die
             Session im Journal und hakt heute im Wochenplan ab.
           </div>
           <button
             className="btn"
             onClick={finish}
-            disabled={checked.size === 0 || saved}
+            disabled={checkedAvailable === 0 || saved}
           >
             {saved ? "✓ Gespeichert & abgehakt" : "Programm abschließen"}
           </button>
