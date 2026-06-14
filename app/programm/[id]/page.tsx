@@ -11,7 +11,8 @@ import {
   ProgramOverrides,
 } from "@/lib/programs";
 import { isoLocal } from "@/lib/plan";
-import { DemoLink, exerciseName } from "@/app/components/ui";
+import { exerciseName } from "@/app/components/ui";
+import { ExerciseVideo } from "@/app/components/ExerciseVideo";
 import Icon from "@/app/components/Icon";
 
 type WeekLog = Record<string, string[]>;
@@ -106,7 +107,7 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
                     {rest.length > 0 && (
                       <div className="d-detail">{rest.join(" — ")}</div>
                     )}
-                    <DemoLink
+                    <ExerciseVideo
                       query={`${exerciseName(name)} ${DEMO_SUFFIX[program.group]}`}
                     />
                   </span>

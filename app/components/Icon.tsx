@@ -14,7 +14,8 @@ export type IconName =
   | "reset"
   | "target"
   | "image"
-  | "coach";
+  | "coach"
+  | "play";
 
 const PATHS: Record<IconName, JSX.Element> = {
   // Haus / Heute
@@ -79,6 +80,13 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
       <path d="M12 8.2l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7.7-1.6Z" />
+    </>
+  ),
+  // Play (im Kreis)
+  play: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 8.5l5 3.5-5 3.5z" />
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,

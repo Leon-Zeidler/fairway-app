@@ -10,7 +10,8 @@ import { useObject, useStringList } from "@/lib/store";
 import { EditableText } from "@/app/components/ui";
 import Icon from "@/app/components/Icon";
 import { FOCUS, PROFILE, NEXT_STEPS, TEE_TIME } from "@/lib/seed";
-import { dayTasks, isoLocal, dowIndex, PLAN } from "@/lib/plan";
+import { dayTasks, isoLocal, dowIndex, PLAN, mondayOf } from "@/lib/plan";
+import { CoachContext } from "@/lib/coach";
 
 function isThisWeek(dateIso: string): boolean {
   const diff = (Date.now() - new Date(dateIso).getTime()) / 86400000;
@@ -43,6 +44,10 @@ export default function Dashboard() {
   const focus = useObject<Focus>("focus", FOCUS);
   const plan = useObject<Record<string, number[]>>("plan", PLAN);
   const nextSteps = useStringList("nextSteps", NEXT_STEPS);
+  const briefing = useObject<{ date: string; text: string }>("dailyBriefing", {
+    date: "",
+    text: "",
+  });
 
   useEffect(() => {
     getSessions()
@@ -50,6 +55,75 @@ export default function Dashboard() {
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
   }, []);
+
+  // Tagesbriefing: einmal pro Tag automatisch vom Coach holen (gecacht).
+  useEffect(() => {
+    if (loading) return; // erst wenn Sessions geladen sind
+    const today = isoLocal(new Date());
+    if (briefing.value.date === today && briefing.value.text) return;
+    let cancelled = false;
+    const monday = mondayOf(0);
+    const weekDone: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      (log.value[isoLocal(d)] || []).forEach((k) => {
+        weekDone[k] = (weekDone[k] || 0) + 1;
+      });
+    }
+    const ctx: CoachContext = {
+      profile: profile.value,
+      focus: focus.value,
+      plan: plan.value,
+      clubs: [],
+      equipment: [],
+      nextSteps: nextSteps.items,
+      recentSessions: sessions.slice(0, 5).map((s) => ({
+        date: s.date,
+        type: s.type,
+        balls: s.balls,
+        score: s.score,
+        rating: s.rating,
+        notes: s.notes,
+      })),
+      weekDone,
+      teeTime: tee.value,
+      programs: [],
+      warmup: [],
+      insights: [],
+      mentalCheck: [],
+      today: new Date().toLocaleDateString("de-DE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+    };
+    fetch("/api/coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "user",
+            content:
+              "Gib mir ein kurzes Tagesbriefing für heute: 1–2 Sätze, was heute ansteht (aus dem Plan) und der wichtigste Fokus. Locker und motivierend. KEINE Aktionen, keine Rückfragen.",
+          },
+        ],
+        context: ctx,
+      }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d || d.notConfigured || !d.reply) return;
+        briefing.set({ date: today, text: d.reply });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // Läuft, sobald die Sessions geladen sind.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const streak = computeStreak(sessions);
   const week = sessions.filter((s) => isThisWeek(s.date));
@@ -100,6 +174,16 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Coach-Tagesbriefing */}
+        {briefing.value.text && briefing.value.date === todayIso && (
+          <div className="brief-card">
+            <span className="brief-icon">
+              <Icon name="coach" size={16} />
+            </span>
+            <span className="brief-text">{briefing.value.text}</span>
+          </div>
+        )}
+
         {/* Coach-CTA */}
         <Link href="/coach" className="coach-cta">
           <span className="coach-cta-icon">
@@ -113,6 +197,12 @@ export default function Dashboard() {
           </span>
           <Icon name="chevron" size={18} className="coach-cta-chev" />
         </Link>
+
+        <div className="row-actions">
+          <Link href="/turnier" className="btn-outline">
+            <Icon name="trophy" size={16} /> Turnier vorbereiten
+          </Link>
+        </div>
 
         {/* Heute dran */}
         <div className="card">
