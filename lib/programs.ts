@@ -2,7 +2,20 @@
 // Quelle sind die kuratierten Seed-Inhalte; Abschluss loggt eine Session
 // und hakt die zugehörige Aktivität im Wochen-Log ab.
 
-import { DRILLS, PITCHING, ROUTINES } from "./seed";
+import {
+  DRILLS,
+  PITCHING,
+  ROUTINES,
+  WARMUP_RORY,
+  RORY_STRENGTH_A,
+  RORY_STRENGTH_B,
+  RORY_POWER,
+  RORY_CIRCUIT_1,
+  RORY_CIRCUIT_2,
+  RORY_CONDITIONING,
+  RORY_ACTIVATION,
+  RORY_RECOVERY,
+} from "./seed";
 import { Routine, SessionType, Step } from "./types";
 import { normalizeStep } from "./gear";
 
@@ -59,6 +72,92 @@ export const PROGRAMS: Program[] = [
     activityKey: "kurzspiel",
     sessionType: "range",
     sections: [{ steps: PITCHING }],
+  },
+  {
+    id: "rory-strength-a",
+    title: "Rory · Strength A (schwer)",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Schwerer Kraftblock - Trap-Bar, Klimmzuege, Lunges (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [
+      { title: "Warmup · Mobility & Activation", steps: WARMUP_RORY },
+      { title: "Hauptblock", steps: RORY_STRENGTH_A },
+    ],
+  },
+  {
+    id: "rory-strength-b",
+    title: "Rory · Strength B (Oberkoerper/Core)",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Druck/Zug + Core - Schraegbank, Renegade Row, Rotation (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [
+      { title: "Warmup · Mobility & Activation", steps: WARMUP_RORY },
+      { title: "Hauptblock", steps: RORY_STRENGTH_B },
+    ],
+  },
+  {
+    id: "rory-power",
+    title: "Rory · Power/Speed",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Explosivkraft - Box Jumps, Med-Ball-Power, schnelle Lifts (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [
+      { title: "Warmup · Mobility & Activation", steps: WARMUP_RORY },
+      { title: "Hauptblock", steps: RORY_POWER },
+    ],
+  },
+  {
+    id: "rory-circuit",
+    title: "Rory · Strength-Endurance-Zirkel",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Kraftausdauer - zwei Zirkel je 3 Runden (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [
+      { title: "Warmup · Mobility & Activation", steps: WARMUP_RORY },
+      { title: "Zirkel 1 · 3 Runden", steps: RORY_CIRCUIT_1 },
+      { title: "Zirkel 2 · 3 Runden", steps: RORY_CIRCUIT_2 },
+    ],
+  },
+  {
+    id: "rory-conditioning",
+    title: "Rory · Conditioning",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Ausdauer + Core - Lauf/Intervalle, Carry, Anti-Rotation (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [
+      { title: "Warmup · Mobility & Activation", steps: WARMUP_RORY },
+      { title: "Hauptblock", steps: RORY_CONDITIONING },
+    ],
+  },
+  {
+    id: "rory-activation",
+    title: "Rory · Activation (vor der Runde)",
+    group: "gym",
+    groupLabel: "Rory · Fitness",
+    focus: "Kurz aktivieren, nicht ermueden - vor der Runde (angelehnt an Rory McIlroy)",
+    activityKey: "gym",
+    sessionType: "gym",
+    sections: [{ steps: RORY_ACTIVATION }],
+  },
+  {
+    id: "rory-recovery",
+    title: "Rory · Recovery",
+    group: "mobility",
+    groupLabel: "Rory · Fitness",
+    focus: "Aktive Erholung - Foam Roll, Mobility, Atmung (angelehnt an Rory McIlroy)",
+    activityKey: "mobility",
+    sessionType: "stretch",
+    sections: [{ steps: RORY_RECOVERY }],
   },
   ...ROUTINES.filter((r) => r.group === "mobility").map(
     (r): Program => ({

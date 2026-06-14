@@ -543,3 +543,78 @@ export const GEAR: GearItem[] = [
   { id: "med-ball", label: "Med-Ball", group: "gym", available: true },
   { id: "box", label: "Sprungbox / Step", group: "gym", available: true },
 ];
+
+/* ── Rory-McIlroy-Plan: Warmup + Sessions (Step[]) ──────────────── */
+
+export const RORY_NOTE =
+  "Angelehnt an oeffentlich berichtetes Training von Rory McIlroy (Stand 2025) - nicht offiziell/garantiert exakt. Echte Struktur: 6-8-Wochen-Bloecke Strength -> Active Recovery -> Power -> Conditioning.";
+
+/** Geteilter Mobility/Activation-Warmup (erste Section der geladenen Sessions). */
+export const WARMUP_RORY: Step[] = [
+  { name: "Lockeres Einlaufen", dose: "3-5 Min", detail: "Puls hoch, locker werden - warm, nicht muede." },
+  { name: "Hamstring Sweep", dose: "30 s", detail: "gehend gestrecktes Bein nach vorn greifen, Huefte mobil machen." },
+  { name: "Quad Grab", dose: "30 s", detail: "Schritt vor, Ferse zum Po ziehen, aufrecht bleiben." },
+  { name: "Lunge Tilt", dose: "30 s/Seite", detail: "90-Grad-Ausfallschritt, Arm ueber Kopf, Oberkoerper zur Seite neigen." },
+  { name: "Dynamic Side Lunge", dose: "30 s/Seite", detail: "seitlich laden, Gewicht kontrolliert verlagern." },
+  { name: "Schulter-Prehab + Scapula", dose: "10 Wdh.", detail: "Band-Dislocates, Schulterblaetter aktivieren.", gear: "band", alt: { name: "Schulter-Prehab ohne Band", dose: "10 Wdh.", detail: "Wall Slides + Armkreise, Schulterblaetter aktivieren." } },
+  { name: "Hueftmobilitaet 90/90", dose: "8/Seite", detail: "kontrolliert wechseln, Oberkoerper aufrecht." },
+];
+
+export const RORY_STRENGTH_A: Step[] = [
+  { name: "Trap-Bar-Kreuzheben", dose: "4x5 (2 schwer)", detail: "Huefte laden, neutraler Ruecken, explosiv hoch. Rory: ~2 schwere Saetze, dann Volumen.", gear: "barbell", alt: { name: "KH-/Koerpergewicht-Hip-Hinge", dose: "4x8", detail: "Huefte zurueck, Ruecken gerade, Hamstrings laden - ohne Langhantel." } },
+  { name: "Neutrale Klimmzuege", dose: "4x5", detail: "voller Hang, Schulterblaetter fuehren, kontrolliert hoch.", gear: "pull-up-bar", alt: { name: "Handtuch-Rudern an der Tuer", dose: "4x10", detail: "schraeg haengend ziehen, Schulterblaetter zusammen." } },
+  { name: "Reverse Lunge (KH)", dose: "3x8/Seite", detail: "Schritt zurueck, Knie sauber, Rumpf fest.", gear: "dumbbells", alt: { name: "Reverse Lunge (Koerpergewicht)", dose: "3x12/Seite", detail: "kontrolliert, Balance halten." } },
+  { name: "Plank mit Beinheben", dose: "3x8/Seite", detail: "Huefte stabil, kein Durchhaengen." },
+];
+
+export const RORY_STRENGTH_B: Step[] = [
+  { name: "15-Grad-Schraegbank-KH-Druecken", dose: "4x6", detail: "Schraegbank, Kurzhanteln (verhindert Dysbalancen), kontrolliert ab und auf.", gear: "dumbbells", alt: { name: "Liegestuetze (Fuesse erhoeht)", dose: "4x10", detail: "Brust-Fokus, Koerper als gerades Brett." } },
+  { name: "Renegade Row", dose: "3x8/Seite", detail: "Plank-Position, KH einarmig rudern, Huefte ruhig.", gear: "dumbbells", alt: { name: "Plank + Schulter-Tap", dose: "3x12/Seite", detail: "Huefte stabil gegen Wegkippen halten." } },
+  { name: "Walking Lunge (KH)", dose: "3x10", detail: "grosser Schritt, Knie ueber dem Fuss.", gear: "dumbbells", alt: { name: "Walking Lunge (Koerpergewicht)", dose: "3x14", detail: "kontrolliert, aufrecht." } },
+  { name: "Med-Ball-Rotation", dose: "3x10/Seite", detail: "aus der Huefte rotieren, explosiv - uebersetzt in Schwung-Speed.", gear: "med-ball", alt: { name: "Stehende Rotation explosiv", dose: "3x10/Seite", detail: "ohne Ball, schnell drehen und abbremsen." } },
+  { name: "Plank", dose: "3x45 s", detail: "Koerper als Brett, Rippen unten." },
+];
+
+export const RORY_POWER: Step[] = [
+  { name: "Box Jumps", dose: "3x10", detail: "explosiv hoch, weich landen, kurz resetten.", gear: "box", alt: { name: "Squat Jumps (Koerpergewicht)", dose: "3x10", detail: "explosiv hoch, weich landen." } },
+  { name: "Squat Jumps", dose: "2x max + 2x10", detail: "erst 2 Saetze max Speed, dann 2x10 betont (optional Weste)." },
+  { name: "Med-Ball-Slams mit Rotation", dose: "3x8/Seite", detail: "ueber Kopf, mit Viertel-Rotation runter, maximale Power.", gear: "med-ball", alt: { name: "Explosive Chop (ohne Ball)", dose: "3x8/Seite", detail: "explosiv diagonal, kontrolliert abbremsen." } },
+  { name: "Overhead-Throws (6-8 kg)", dose: "3x5", detail: "explosiv ueber Kopf abwerfen.", gear: "med-ball", alt: { name: "Explosiver Sprung-Reach", dose: "3x5", detail: "tief laden, explosiv hochstrecken." } },
+  { name: "Schnelle leichte Lifts (Speed)", dose: "3x3", detail: "leichtes Gewicht, maximale Bewegungsgeschwindigkeit.", gear: "dumbbells", alt: { name: "Betont schnelle Sprung-Kniebeuge", dose: "3x3", detail: "Geschwindigkeit vor Last." } },
+];
+
+export const RORY_CIRCUIT_1: Step[] = [
+  { name: "Romanian Deadlift", dose: "3 Runden - 8-10", detail: "Huefte zurueck, Hamstrings laden, Ruecken neutral. 1 Min Pause pro Runde.", gear: "barbell", alt: { name: "Single-Leg RDL (Koerpergewicht)", dose: "3x8/Seite", detail: "Balance, Huefte laden." } },
+  { name: "Klimmzug", dose: "3 Runden - 5-10", detail: "voller Hang, sauber ziehen.", gear: "pull-up-bar", alt: { name: "Handtuch-Rudern an der Tuer", dose: "3x10", detail: "schraeg haengend ziehen." } },
+  { name: "Plank mit Beinheben", dose: "3 Runden - 8/Seite", detail: "Huefte stabil halten." },
+];
+
+export const RORY_CIRCUIT_2: Step[] = [
+  { name: "Reverse Lunge", dose: "3 Runden - 6-8/Seite", detail: "kontrolliert, Knie sauber. 1 Min Pause pro Runde." },
+  { name: "Renegade Row", dose: "3 Runden - 6-8/Seite", detail: "Plank-Row, Huefte ruhig.", gear: "dumbbells", alt: { name: "Plank + Schulter-Tap", dose: "3x10/Seite", detail: "Huefte stabil." } },
+  { name: "Jump Squat", dose: "3 Runden - 5", detail: "explosiv, weich landen." },
+];
+
+export const RORY_CONDITIONING: Step[] = [
+  { name: "5K-Lauf", dose: "~20-25 Min", detail: "gleichmaessig (Rory-Ziel ~20 Min). Kein Radfahren - Haltung." },
+  { name: "Intervalle (optional)", dose: "6x 1 Min schnell / 1 locker", detail: "wenn frisch, statt Dauerlauf. Schwimmen geht auch." },
+  { name: "Pallof Press", dose: "3x12/Seite", detail: "Anti-Rotation, Rumpf bleibt stabil.", gear: "cable", alt: { name: "Plank-Anti-Rotation", dose: "3x20 s/Seite", detail: "Huefte gegen Wegkippen halten." } },
+  { name: "Farmer's Carry", dose: "3x30 m", detail: "schwer, aufrecht, Rumpf fest.", gear: "dumbbells", alt: { name: "Rucksack-Carry", dose: "3x30 m", detail: "Rucksack mit Gewicht, aufrecht gehen." } },
+  { name: "Hollow Hold", dose: "3x30 s", detail: "unterer Ruecken am Boden, Koerperspannung." },
+];
+
+export const RORY_ACTIVATION: Step[] = [
+  { name: "Lockeres Einlaufen + Armkreisen", dose: "3 Min", detail: "warm werden, nicht ermueden." },
+  { name: "World's Greatest Stretch", dose: "6/Seite", detail: "Huefte und Brust oeffnen, kontrolliert." },
+  { name: "Rotations-Squat-Jumps", dose: "2x6", detail: "leicht, nur aktivieren." },
+  { name: "Med-Ball-Rotation (leicht)", dose: "2x8/Seite", detail: "Speed primen, nicht ermueden.", gear: "med-ball", alt: { name: "Stehende Rotation", dose: "2x8/Seite", detail: "zuegig, ohne Ball." } },
+  { name: "Band-Walks (Huefte)", dose: "2x10/Seite", detail: "Gesaess aktivieren, Spannung halten.", gear: "band", alt: { name: "Hueft-Abduktion (Koerpergewicht)", dose: "2x12/Seite", detail: "Seitenlage, Bein kontrolliert heben." } },
+];
+
+export const RORY_RECOVERY: Step[] = [
+  { name: "Foam Roll Ganzkoerper", dose: "8-10 Min", detail: "langsam, empfindliche Punkte 20 s halten.", gear: "foam-roller", alt: { name: "Boden-Mobilisation / Dehn-Flow", dose: "8-10 Min", detail: "sanft mobilisieren, ohne Rolle." } },
+  { name: "Lockeres Gehen/Schwimmen", dose: "20-30 Min", detail: "aktive Erholung, niedrige Intensitaet." },
+  { name: "Hueftbeuger- und Hamstring-Dehnung", dose: "45 s/Seite", detail: "ruhig atmen, nicht reissen." },
+  { name: "Brust-/Schulteroeffner", dose: "45 s/Seite", detail: "Tuerrahmen, sanft vorlehnen." },
+  { name: "Atmung und Schlaf-Reset", dose: "5 Min", detail: "tiefe Atmung; Rory priorisiert 8 h Schlaf (WHOOP)." },
+];
