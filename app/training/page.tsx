@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Focus, GearItem } from "@/lib/types";
 import { useObject, useCollection } from "@/lib/store";
-import { FOCUS, GEAR } from "@/lib/seed";
+import { FOCUS, GEAR, RORY_NOTE } from "@/lib/seed";
 import { PROGRAMS, applyOverride, ProgramOverrides } from "@/lib/programs";
 import Icon from "@/app/components/Icon";
 
@@ -69,6 +69,8 @@ export default function Training() {
             </div>
           ))}
         </div>
+
+        <div className="note-box">{RORY_NOTE}</div>
 
         {GROUPS.map((g) => {
           const list = PROGRAMS.filter((p) => p.group === g.key);

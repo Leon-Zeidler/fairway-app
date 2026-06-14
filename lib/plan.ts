@@ -41,6 +41,7 @@ export const ACTIVITIES: Activity[] = [
   },
 ];
 
+// Hinweis: gym/mobility steuern den Tagesplan nicht mehr (Rory ist fix in RORY_BY_DOW); genutzt fuer technik/kurzspiel/platz + Woche-Tracker.
 // Empfehlung pro Wochentag (0 = Mo … 6 = So).
 export const PLAN: Record<string, number[]> = {
   mobility: [0, 1, 2, 3, 4, 5, 6], // täglich

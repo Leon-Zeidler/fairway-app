@@ -40,11 +40,16 @@ export default function Woche() {
     log.set({ [dateIso]: next });
   }
 
-  // Wochensumme pro Aktivität (für die Fortschrittsbalken).
+  // Geplante Einheiten/Woche je Aktivität aus dem aktiven Tagesplan ableiten
+  // (Rory-Fitness ist fest, Golf kommt aus dem Plan) — so passen die Ziele zur Realität.
+  const plannedCount = (key: string) =>
+    [0, 1, 2, 3, 4, 5, 6].filter((dow) =>
+      dayTasks(dow, plan.value).some((t) => t.key === key)
+    ).length;
   const counts = ACTIVITIES.map((a) => ({
     ...a,
     done: days.filter((d) => done(isoLocal(d), a.key)).length,
-    plan: (plan.value[a.key] ?? PLAN[a.key])?.length ?? 0,
+    plan: plannedCount(a.key),
   }));
   const totalDone = counts.reduce((s, c) => s + c.done, 0);
   const totalPlan = counts.reduce((s, c) => s + c.plan, 0);
@@ -170,9 +175,10 @@ export default function Woche() {
         })}
 
         <div className="note-box">
-          Der Plan: Mobility jeden Tag (rotiert automatisch durch die Bereiche),
-          Range Mo/Mi/Fr, Kurzspiel Mi/Sa, Gym Mo/Do, Platz am Wochenende.
-          Verpasst ist egal — einfach beim nächsten Tag weitermachen.
+          Dein Plan folgt jetzt Rory McIlroys Rhythmus: Mo Strength A, Di Strength
+          B, Mi Power, Do Zirkel, Fr Conditioning, Sa Activation, So Recovery —
+          plus dein Golf am selben Tag. Verpasst ist egal — einfach beim nächsten
+          Tag weitermachen.
         </div>
       </div>
     </>
