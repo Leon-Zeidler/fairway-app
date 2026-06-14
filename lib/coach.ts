@@ -205,6 +205,7 @@ const ACTIVITY_KEYS: ActivityKey[] = [
 const STATUSES: EquipStatus[] = ["good", "watch", "issue"];
 const SESSION_TYPES = ["range", "course", "gym", "stretch"];
 
+// Leere Strings gelten als "nicht gesetzt" — Felder lassen sich damit nicht auf "" leeren.
 const str = (v: unknown): string | undefined =>
   typeof v === "string" && v.trim() ? v.trim() : undefined;
 const strArr = (v: unknown): string[] =>
@@ -336,16 +337,20 @@ export function sanitizeActions(raw: unknown): CoachAction[] {
         const id = str(o.id);
         const index = intIndex(o.index);
         if (!id || index === undefined) break;
-        out.push({
-          type: "edit_program_step",
-          id,
-          index,
-          name: str(o.name),
-          detail: str(o.detail),
-          club: str(o.club),
-          dose: str(o.dose),
-          gear: gearId(o.gear),
-        });
+        const name = str(o.name);
+        const detail = str(o.detail);
+        const club = str(o.club);
+        const dose = str(o.dose);
+        const gear = gearId(o.gear);
+        if (
+          name === undefined &&
+          detail === undefined &&
+          club === undefined &&
+          dose === undefined &&
+          gear === undefined
+        )
+          break;
+        out.push({ type: "edit_program_step", id, index, name, detail, club, dose, gear });
         break;
       }
       case "remove_program_step": {

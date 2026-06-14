@@ -25,6 +25,13 @@ describe("sanitizeActions — set_program with structured steps", () => {
     const a = out[0] as any;
     expect(a.sections[0].steps[0].gear).toBeUndefined();
   });
+
+  it("behält ein gültiges gear-Kürzel im Step", () => {
+    const out = sanitizeActions([
+      { type: "set_program", id: "gym1", sections: [{ steps: [{ name: "X", detail: "", gear: "band" }] }] },
+    ]);
+    expect((out[0] as any).sections[0].steps[0].gear).toBe("band");
+  });
 });
 
 describe("sanitizeActions — add_program_step", () => {
@@ -55,6 +62,9 @@ describe("sanitizeActions — edit_program_step", () => {
   it("verwirft negativen oder fehlenden Index", () => {
     expect(sanitizeActions([{ type: "edit_program_step", id: "gym1", index: -1 }])).toHaveLength(0);
     expect(sanitizeActions([{ type: "edit_program_step", id: "gym1" }])).toHaveLength(0);
+  });
+  it("verwirft ein edit ohne Patch-Felder", () => {
+    expect(sanitizeActions([{ type: "edit_program_step", id: "gym1", index: 2 }])).toHaveLength(0);
   });
 });
 

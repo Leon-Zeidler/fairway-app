@@ -323,7 +323,7 @@ export default function Coach() {
           [a.id]: {
             title: a.title,
             focus: a.focus,
-            sections: a.sections.map((s) => ({ title: s.title, steps: s.steps })),
+            sections: a.sections.map((s) => ({ title: s.title, steps: [...s.steps] })),
           },
         });
         break;
