@@ -4,8 +4,7 @@ import { GEAR_IDS } from "../gear";
 import { Step } from "../types";
 
 const RORY_IDS = [
-  "rory-strength-a",
-  "rory-strength-b",
+  "rory-strength",
   "rory-power",
   "rory-circuit",
   "rory-conditioning",
@@ -20,7 +19,7 @@ function steps(id: string): Step[] {
 }
 
 describe("Rory-Programme", () => {
-  it("alle 7 Programme existieren", () => {
+  it("alle Programme existieren", () => {
     for (const id of RORY_IDS) expect(getProgram(id), id).toBeTruthy();
   });
 
@@ -40,7 +39,7 @@ describe("Rory-Programme", () => {
   });
 
   it("geladene Programme starten mit einem Warmup-Schritt", () => {
-    for (const id of ["rory-strength-a", "rory-strength-b", "rory-power", "rory-circuit", "rory-conditioning"]) {
+    for (const id of ["rory-strength", "rory-power", "rory-circuit", "rory-conditioning"]) {
       const first = getProgram(id)!.sections[0].steps[0];
       expect(first.name, id).toContain("Einlaufen");
     }

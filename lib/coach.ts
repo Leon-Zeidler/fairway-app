@@ -151,8 +151,8 @@ Verfügbare Aktionen (nur diese, exakt dieses Schema):
 - {"type":"complete_today","activities":["mobility","technik"]}
   Hakt heute Aktivitäten im Wochenplan als erledigt ab.
 
-- {"type":"set_program","id":"range","title":"...","focus":"...","sections":[{"title":"1 · ...","steps":[{"name":"Gate-Drill","detail":"...","club":"7 Eisen","dose":"15 Bälle"}]}]}
-  Schreibt ein ganzes Programm/Workout neu. Schritte sind OBJEKTE: name (Pflicht), detail, club (nur Golf), dose ("15 Bälle"/"3×8"/"45 s/Seite"), gear (eines von: ${GEAR_IDS.join(", ")}). "id" aus dem programs-Kontext (range, kurzspiel, mob1..mob5, golf1..golf3, gym1..gym4).
+- {"type":"set_program","id":"range-path","title":"...","focus":"...","sections":[{"title":"1 · ...","steps":[{"name":"Gate-Drill","detail":"...","club":"7 Eisen","dose":"15 Bälle"}]}]}
+  Schreibt ein ganzes Programm/Workout neu. Schritte sind OBJEKTE: name (Pflicht), detail, club (nur Golf), dose ("15 Bälle"/"3×8"/"45 s/Seite"), gear (eines von: ${GEAR_IDS.join(", ")}). "id" aus dem programs-Kontext (z.B. range-path/-driver/-basics, kurzspiel, rory-strength/-power/-circuit/-conditioning, mob1..mob5, gym1..gym4).
 
 - {"type":"add_program_step","id":"gym1","step":{"name":"Hip Thrust","detail":"...","dose":"3×10"}}
   Hängt EINEN strukturierten Schritt an ein Programm an.

@@ -560,19 +560,13 @@ export const WARMUP_RORY: Step[] = [
   { name: "Hüftmobilität 90/90", dose: "8/Seite", detail: "kontrolliert wechseln, Oberkörper aufrecht." },
 ];
 
-export const RORY_STRENGTH_A: Step[] = [
+export const RORY_STRENGTH: Step[] = [
   { name: "Trap-Bar-Kreuzheben", dose: "4×5 (2 schwer)", detail: "Hüfte laden, neutraler Rücken, explosiv hoch. Rory: ~2 schwere Sätze, dann Volumen.", gear: "barbell", alt: { name: "KH-/Körpergewicht-Hip-Hinge", dose: "4×8", detail: "Hüfte zurück, Rücken gerade, Hamstrings laden – ohne Langhantel." } },
   { name: "Neutrale Klimmzüge", dose: "4×5", detail: "voller Hang, Schulterblätter führen, kontrolliert hoch.", gear: "pull-up-bar", alt: { name: "Handtuch-Rudern an der Tür", dose: "4×10", detail: "schräg hängend ziehen, Schulterblätter zusammen." } },
-  { name: "Reverse Lunge (KH)", dose: "3×8/Seite", detail: "Schritt zurück, Knie sauber, Rumpf fest.", gear: "dumbbells", alt: { name: "Reverse Lunge (Körpergewicht)", dose: "3×12/Seite", detail: "kontrolliert, Balance halten." } },
-  { name: "Plank mit Beinheben", dose: "3×8/Seite", detail: "Hüfte stabil, kein Durchhängen." },
-];
-
-export const RORY_STRENGTH_B: Step[] = [
   { name: "15°-Schrägbank-KH-Drücken", dose: "4×6", detail: "Schrägbank, Kurzhanteln (verhindert Dysbalancen), kontrolliert ab und auf.", gear: "dumbbells", alt: { name: "Liegestütze (Füße erhöht)", dose: "4×10", detail: "Brust-Fokus, Körper als gerades Brett." } },
+  { name: "Reverse Lunge (KH)", dose: "3×8/Seite", detail: "Schritt zurück, Knie sauber, Rumpf fest.", gear: "dumbbells", alt: { name: "Reverse Lunge (Körpergewicht)", dose: "3×12/Seite", detail: "kontrolliert, Balance halten." } },
   { name: "Renegade Row", dose: "3×8/Seite", detail: "Plank-Position, KH einarmig rudern, Hüfte ruhig.", gear: "dumbbells", alt: { name: "Plank + Schulter-Tap", dose: "3×12/Seite", detail: "Hüfte stabil gegen Wegkippen halten." } },
-  { name: "Walking Lunge (KH)", dose: "3×10", detail: "großer Schritt, Knie über dem Fuß.", gear: "dumbbells", alt: { name: "Walking Lunge (Körpergewicht)", dose: "3×14", detail: "kontrolliert, aufrecht." } },
-  { name: "Med-Ball-Rotation", dose: "3×10/Seite", detail: "aus der Hüfte rotieren, explosiv – übersetzt in Schwung-Speed.", gear: "med-ball", alt: { name: "Stehende Rotation explosiv", dose: "3×10/Seite", detail: "ohne Ball, schnell drehen und abbremsen." } },
-  { name: "Plank", dose: "3×45 s", detail: "Körper als Brett, Rippen unten." },
+  { name: "Plank mit Beinheben", dose: "3×8/Seite", detail: "Hüfte stabil, kein Durchhängen." },
 ];
 
 export const RORY_POWER: Step[] = [
@@ -596,8 +590,8 @@ export const RORY_CIRCUIT_2: Step[] = [
 ];
 
 export const RORY_CONDITIONING: Step[] = [
-  { name: "5K-Lauf", dose: "~20–25 Min", detail: "gleichmäßig (Rory-Ziel ~20 Min). Kein Radfahren – Haltung." },
-  { name: "Intervalle (optional)", dose: "6× 1 Min schnell / 1 locker", detail: "wenn frisch, statt Dauerlauf. Schwimmen geht auch." },
+  { name: "Schwimmen", dose: "20–30 Min", detail: "gleichmäßige Bahnen, ruhiger Atemrhythmus – gelenkschonende Ausdauer." },
+  { name: "Schwimm-Intervalle (optional)", dose: "6× 1 Bahn zügig / 1 locker", detail: "wenn frisch, statt Dauerschwimmen – kurze schnelle Bahnen." },
   { name: "Pallof Press", dose: "3×12/Seite", detail: "Anti-Rotation, Rumpf bleibt stabil.", gear: "cable", alt: { name: "Plank-Anti-Rotation", dose: "3×20 s/Seite", detail: "Hüfte gegen Wegkippen halten." } },
   { name: "Farmer's Carry", dose: "3×30 m", detail: "schwer, aufrecht, Rumpf fest.", gear: "dumbbells", alt: { name: "Rucksack-Carry", dose: "3×30 m", detail: "Rucksack mit Gewicht, aufrecht gehen." } },
   { name: "Hollow Hold", dose: "3×30 s", detail: "unterer Rücken am Boden, Körperspannung." },
