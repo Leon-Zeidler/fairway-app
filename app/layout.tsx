@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/Nav";
 import CoachFab from "./components/CoachFab";
+import ScrollReset from "./components/ScrollReset";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -46,7 +47,10 @@ export default function RootLayout({
   return (
     <html lang="de" className={jakarta.variable}>
       <body>
-        {children}
+        <div className="app-scroll" id="scroll-root">
+          {children}
+        </div>
+        <ScrollReset />
         <CoachFab />
         <Nav />
       </body>
