@@ -5,3 +5,6 @@ out
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Lokale Session-Archive (nicht ins öffentliche Repo)
+CC-Session-Logs/
