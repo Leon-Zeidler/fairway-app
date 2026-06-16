@@ -1829,3 +1829,107 @@ textarea {
 .muted {
   color: var(--muted);
 }
+
+/* ── Runden-Statistik-Eingabe (Journal) ─────────────────────────── */
+
+.round-stats {
+  margin-top: 12px;
+  padding-top: 4px;
+}
+
+/* ── „Weg zu Scratch" — Benchmarks & Fokus ──────────────────────── */
+
+.focus-box {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 6px 0 16px;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  background: var(--green-soft);
+  text-decoration: none;
+  color: var(--green-ink);
+  transition: transform 0.3s var(--ease);
+}
+.focus-box:active {
+  transform: scale(0.99);
+  opacity: 0.9;
+}
+.focus-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.focus-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.focus-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.focus-advice {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--green-ink);
+  opacity: 0.82;
+}
+.focus-chev {
+  flex: none;
+  color: var(--green);
+}
+
+.bench-list .bench-row {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.bench-list .bench-row:first-child {
+  border-top: none;
+}
+.bench-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.bench-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.bench-val {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.bench-val b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.bench-val b.ok {
+  color: var(--green-ink);
+}
+.bench-val b.miss {
+  color: var(--amber);
+}
+.bench-target {
+  font-size: 11px;
+  color: var(--faint);
+  font-weight: 600;
+}
+.prog-fill.warn {
+  background: var(--amber);
+}

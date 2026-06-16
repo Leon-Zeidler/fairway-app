@@ -6,11 +6,32 @@ import { getSessions, addSession, deleteSession, computeStreak } from "@/lib/sto
 import { uid } from "@/lib/store";
 import { BALL_BUCKETS } from "@/lib/seed";
 import { isoLocal, mondayOf } from "@/lib/plan";
+import { roundStats, hasRoundStats } from "@/lib/golf";
+import Icon from "@/app/components/Icon";
+import ScratchCard from "@/app/components/ScratchCard";
 
 const TYPES: SessionType[] = ["range", "course", "gym", "stretch"];
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Freitext-Zahl → number | undefined (leer = nicht erfasst). */
+function numOr(v: string): number | undefined {
+  return v.trim() !== "" && !Number.isNaN(Number(v)) ? Number(v) : undefined;
+}
+
+/** Runden-Meta-Zeile (z.B. „+12 zu Par · FW 57% · GIR 50% · 32 Putts"). */
+function roundMeta(s: Session): string {
+  const r = roundStats(s);
+  return [
+    r.toPar != null ? `${r.toPar >= 0 ? "+" : ""}${r.toPar} zu Par` : null,
+    r.fairwayPct != null ? `FW ${Math.round(r.fairwayPct * 100)}%` : null,
+    r.girPct != null ? `GIR ${Math.round(r.girPct * 100)}%` : null,
+    r.putts != null ? `${r.putts} Putts` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 type Tab = "log" | "stats";
@@ -27,6 +48,19 @@ export default function Journal() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Runden-Statistik (optional, nur Platz)
+  const [showStats, setShowStats] = useState(false);
+  const [holes, setHoles] = useState<9 | 18>(18);
+  const [strokes, setStrokes] = useState("");
+  const [coursePar, setCoursePar] = useState("");
+  const [fwHit, setFwHit] = useState("");
+  const [fwOf, setFwOf] = useState("");
+  const [girHit, setGirHit] = useState("");
+  const [putts, setPutts] = useState("");
+  const [scrMade, setScrMade] = useState("");
+  const [scrTries, setScrTries] = useState("");
+  const [penalties, setPenalties] = useState("");
+
   async function refresh() {
     setSessions(await getSessions());
   }
@@ -34,12 +68,46 @@ export default function Journal() {
     refresh();
   }, []);
 
+  function resetForm() {
+    setBalls("");
+    setScore("");
+    setCourse("");
+    setNotes("");
+    setRating(3);
+    setShowStats(false);
+    setHoles(18);
+    setStrokes("");
+    setCoursePar("");
+    setFwHit("");
+    setFwOf("");
+    setGirHit("");
+    setPutts("");
+    setScrMade("");
+    setScrTries("");
+    setPenalties("");
+  }
+
   async function save() {
     setSaving(true);
     const noteParts = [
       type === "course" && course.trim() ? course.trim() : "",
       notes.trim(),
     ].filter(Boolean);
+    const roundFields =
+      type === "course" && showStats
+        ? {
+            holesPlayed: holes,
+            strokes: numOr(strokes),
+            coursePar: numOr(coursePar),
+            fairwaysHit: numOr(fwHit),
+            fairwaysPossible: numOr(fwOf),
+            girHit: numOr(girHit),
+            putts: numOr(putts),
+            scramblingMade: numOr(scrMade),
+            scramblingTries: numOr(scrTries),
+            penalties: numOr(penalties),
+          }
+        : {};
     const s: Session = {
       id: uid("s"),
       date,
@@ -51,14 +119,11 @@ export default function Journal() {
       notes: noteParts.join(" — ") || undefined,
       createdAt: new Date().toISOString(),
       user_id: null,
+      ...roundFields,
     };
     try {
       await addSession(s);
-      setBalls("");
-      setScore("");
-      setCourse("");
-      setNotes("");
-      setRating(3);
+      resetForm();
       await refresh();
     } catch (e) {
       alert("Speichern fehlgeschlagen: " + (e as Error).message);
@@ -224,6 +289,146 @@ export default function Journal() {
                     onChange={(e) => setScore(e.target.value)}
                     placeholder="z.B. 28"
                   />
+
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    style={{ marginTop: 14 }}
+                    onClick={() => setShowStats((v) => !v)}
+                  >
+                    <Icon name={showStats ? "reset" : "plus"} size={15} />
+                    {showStats
+                      ? "Runden-Statistik ausblenden"
+                      : "Runden-Statistik erfassen"}
+                  </button>
+
+                  {showStats && (
+                    <div className="round-stats">
+                      <label className="field">Löcher</label>
+                      <div className="seg">
+                        <button
+                          type="button"
+                          className={holes === 9 ? "active" : ""}
+                          onClick={() => setHoles(9)}
+                        >
+                          9 Löcher
+                        </button>
+                        <button
+                          type="button"
+                          className={holes === 18 ? "active" : ""}
+                          onClick={() => setHoles(18)}
+                        >
+                          18 Löcher
+                        </button>
+                      </div>
+
+                      <div className="tee-grid" style={{ marginTop: 10 }}>
+                        <div>
+                          <label className="field">Schläge (Score)</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={strokes}
+                            onChange={(e) => setStrokes(e.target.value)}
+                            placeholder={holes === 18 ? "z.B. 84" : "z.B. 42"}
+                          />
+                        </div>
+                        <div>
+                          <label className="field">Par</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={coursePar}
+                            onChange={(e) => setCoursePar(e.target.value)}
+                            placeholder={holes === 18 ? "72" : "36"}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="tee-grid" style={{ marginTop: 10 }}>
+                        <div>
+                          <label className="field">Fairways getroffen</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={fwHit}
+                            onChange={(e) => setFwHit(e.target.value)}
+                            placeholder="z.B. 8"
+                          />
+                        </div>
+                        <div>
+                          <label className="field">von</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={fwOf}
+                            onChange={(e) => setFwOf(e.target.value)}
+                            placeholder={holes === 18 ? "14" : "7"}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="tee-grid" style={{ marginTop: 10 }}>
+                        <div>
+                          <label className="field">Grüns in Reg. (GIR)</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={girHit}
+                            onChange={(e) => setGirHit(e.target.value)}
+                            placeholder="z.B. 9"
+                          />
+                        </div>
+                        <div>
+                          <label className="field">Putts gesamt</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={putts}
+                            onChange={(e) => setPutts(e.target.value)}
+                            placeholder={holes === 18 ? "z.B. 32" : "z.B. 16"}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="tee-grid" style={{ marginTop: 10 }}>
+                        <div>
+                          <label className="field">Up&amp;Down ✓</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={scrMade}
+                            onChange={(e) => setScrMade(e.target.value)}
+                            placeholder="z.B. 4"
+                          />
+                        </div>
+                        <div>
+                          <label className="field">Up&amp;Down-Versuche</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={scrTries}
+                            onChange={(e) => setScrTries(e.target.value)}
+                            placeholder="z.B. 7"
+                          />
+                        </div>
+                      </div>
+
+                      <label className="field">Strafschläge</label>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={penalties}
+                        onChange={(e) => setPenalties(e.target.value)}
+                        placeholder="z.B. 2"
+                      />
+
+                      <div className="sub" style={{ margin: "12px 0 0" }}>
+                        Alles optional — was du einträgst, fließt in „Weg zu
+                        Scratch" (Verlauf) ein.
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -257,31 +462,38 @@ export default function Journal() {
               {sessions.length === 0 ? (
                 <div className="empty">Noch keine Einträge.</div>
               ) : (
-                sessions.map((s) => (
-                  <div className="session-item" key={s.id}>
-                    <div>
-                      <span className="s-type">{SESSION_LABELS[s.type]}</span>
-                      <div className="s-notes">{s.notes || "—"}</div>
-                      <div className="s-meta">
-                        {s.balls ? `${s.balls} Bälle` : ""}
-                        {s.score ? ` · ${s.score} Pkt` : ""}
-                        {" · "}
-                        {"★".repeat(s.rating)}
+                sessions.map((s) => {
+                  const meta = hasRoundStats(s) ? roundMeta(s) : "";
+                  return (
+                    <div className="session-item" key={s.id}>
+                      <div>
+                        <span className="s-type">{SESSION_LABELS[s.type]}</span>
+                        <div className="s-notes">{s.notes || "—"}</div>
+                        <div className="s-meta">
+                          {s.balls ? `${s.balls} Bälle` : ""}
+                          {s.score ? ` · ${s.score} Pkt` : ""}
+                          {" · "}
+                          {"★".repeat(s.rating)}
+                        </div>
+                        {meta && <div className="s-meta">{meta}</div>}
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div className="s-date">{s.date}</div>
+                        <button className="btn-ghost" onClick={() => remove(s.id)}>
+                          löschen
+                        </button>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div className="s-date">{s.date}</div>
-                      <button className="btn-ghost" onClick={() => remove(s.id)}>
-                        löschen
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </>
         ) : (
           <>
+            {/* Weg zu Scratch (nur wenn Runden-Stats vorhanden) */}
+            <ScratchCard sessions={sessions} />
+
             {/* Kennzahlen */}
             <div className="card">
               <h2>Überblick</h2>
@@ -383,17 +595,21 @@ export default function Journal() {
                     </div>
                   )}
                   <div style={{ marginTop: 8 }}>
-                    {stats.rounds.map((r) => (
-                      <div className="session-item" key={r.id}>
-                        <div>
-                          <span className="s-type">
-                            {r.score ? `${r.score} Punkte` : "Runde"}
-                          </span>
-                          <div className="s-notes">{r.notes || "—"}</div>
+                    {stats.rounds.map((r) => {
+                      const meta = hasRoundStats(r) ? roundMeta(r) : "";
+                      return (
+                        <div className="session-item" key={r.id}>
+                          <div>
+                            <span className="s-type">
+                              {r.score ? `${r.score} Punkte` : "Runde"}
+                            </span>
+                            <div className="s-notes">{r.notes || "—"}</div>
+                            {meta && <div className="s-meta">{meta}</div>}
+                          </div>
+                          <div className="s-date">{r.date}</div>
                         </div>
-                        <div className="s-date">{r.date}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </>
               )}

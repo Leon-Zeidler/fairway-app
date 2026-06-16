@@ -10,12 +10,24 @@ export interface Session {
   type: SessionType;
   durationMin?: number;
   balls?: number; // wie viele Bälle (für Range)
-  score?: number; // Stableford-Punkte / Schläge (für Course)
+  score?: number; // Stableford-Punkte (für Course)
   rating: number; // Selbstbewertung 1–5
   drills: string[]; // IDs der abgehakten Drills
   notes?: string;
   createdAt: string; // ISO timestamp
   user_id?: string | null; // für späteren Multi-User-Support
+
+  // ── On-Course-Performance (optional, nur für type === "course") ──
+  holesPlayed?: 9 | 18; // gespielte Löcher
+  strokes?: number; // Brutto-Schläge gesamt
+  coursePar?: number; // Par der gespielten Runde (z.B. 72 / 36)
+  fairwaysHit?: number; // getroffene Fairways
+  fairwaysPossible?: number; // mögliche Fairways (Löcher ohne Par 3)
+  girHit?: number; // Grüns in Regulation (von holesPlayed)
+  putts?: number; // Putts gesamt
+  scramblingMade?: number; // erfolgreiche Up&Downs (Grün verfehlt, trotzdem Par)
+  scramblingTries?: number; // Up&Down-Versuche (= verfehlte Grüns)
+  penalties?: number; // Strafschläge gesamt
 }
 
 export const SESSION_LABELS: Record<SessionType, string> = {
