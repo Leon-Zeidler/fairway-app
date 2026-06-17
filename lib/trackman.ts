@@ -111,7 +111,15 @@ export function parseTrackmanCsv(text: string): ParsedCsv {
   if (headerIdx < 0) return { shots: [], unit: "m", warnings: ["Keine Trackman-Kopfzeile (Club/Carry) gefunden"] };
 
   const headers = splitLine(lines[headerIdx], delim).map((h) => h.toLowerCase());
-  const decimalComma = delim !== ","; // bei ; oder \t üblich; bei , niemals
+
+  // Dezimaltrenner per Daten-Stichprobe bestimmen — Tab-Dateien können Punkt
+  // ODER Komma als Dezimaltrenner haben, das Trennzeichen allein reicht nicht.
+  const sample = lines
+    .slice(headerIdx + 1, headerIdx + 11)
+    .flatMap((l) => splitLine(l, delim));
+  const hasCommaDecimal = sample.some((c) => /^-?\d+,\d+$/.test(c));
+  const hasDotDecimal = sample.some((c) => /^-?\d+\.\d+$/.test(c));
+  const decimalComma = delim !== "," && hasCommaDecimal && !hasDotDecimal;
 
   // Einheit aus den Headern
   const blob = headers.join(" ");
@@ -124,7 +132,7 @@ export function parseTrackmanCsv(text: string): ParsedCsv {
   const col = {
     clubSpeed: findCol(headers, used, (h) => /club/.test(h) && /speed/.test(h)),
     ballSpeed: findCol(headers, used, (h) => /ball/.test(h) && /speed/.test(h)),
-    club: findCol(headers, used, (h) => /^club( (name|type))?$/.test(h.trim()) || (/club/.test(h) && !/speed|path|face/.test(h))),
+    club: findCol(headers, used, (h) => /club/.test(h) && !/speed|path|face|attack/.test(h)),
     smash: findCol(headers, used, (h) => /smash/.test(h)),
     carry: findCol(headers, used, (h) => /carry/.test(h) && !/side|dir|dev/.test(h)),
     total: findCol(headers, used, (h) => /total/.test(h) && !/spin|side|dir|dev/.test(h)),

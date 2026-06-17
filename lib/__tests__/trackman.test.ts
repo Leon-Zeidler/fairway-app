@@ -47,6 +47,19 @@ describe("parseTrackmanCsv", () => {
     expect(p.shots[0].smash).toBeCloseTo(1.41);
   });
 
+  it("liest tab-getrennte CSV mit Punkt-Dezimal (yards)", () => {
+    const csv = [
+      "Club\tCarry (yds)\tSmash",
+      "7 Iron\t160.5\t1.41",
+      "7 Iron\t161.0\t1.40",
+    ].join("\n");
+    const p = parseTrackmanCsv(csv);
+    expect(p.unit).toBe("yd");
+    expect(p.shots).toHaveLength(2);
+    expect(p.shots[0].carry).toBeCloseTo(160.5);
+    expect(p.shots[0].smash).toBeCloseTo(1.41);
+  });
+
   it("überspringt Average-Zeilen und Zeilen ohne Carry", () => {
     const csv = [
       "Club,Carry (m)",
