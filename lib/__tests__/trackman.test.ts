@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { normalizeClubName } from "../trackman";
 import { parseTrackmanCsv } from "../trackman";
+import { summarizeSession } from "../trackman";
 
 describe("normalizeClubName", () => {
   it("legt Trackman- und Bag-Namen auf denselben Schlüssel", () => {
@@ -79,5 +80,48 @@ describe("parseTrackmanCsv", () => {
   it("gibt leeres Ergebnis bei fehlender Kopfzeile", () => {
     const p = parseTrackmanCsv("nur,irgendein,text\n1,2,3");
     expect(p.shots).toHaveLength(0);
+  });
+});
+
+describe("summarizeSession", () => {
+  it("mittelt getrimmt und verwirft Ausreißer", () => {
+    const s = summarizeSession({
+      unit: "m",
+      warnings: [],
+      shots: [
+        { club: "7 Iron", carry: 140 },
+        { club: "7 Iron", carry: 142 },
+        { club: "7 Iron", carry: 141 },
+        { club: "7 Iron", carry: 80 }, // Topf → raus
+      ],
+    });
+    const seven = s.clubs.find((c) => c.club === "7 Iron")!;
+    expect(seven.carryAvg).toBe(141);
+    expect(seven.shots).toBe(3);
+    expect(seven.dropped).toBe(1);
+  });
+
+  it("rechnet Yards in Meter um", () => {
+    const s = summarizeSession({ unit: "yd", warnings: [], shots: [{ club: "Driver", carry: 100 }] });
+    expect(s.clubs[0].carryAvg).toBe(91); // 100 * 0.9144 = 91.44
+    expect(s.sourceUnit).toBe("yd");
+    expect(s.unit).toBe("m");
+  });
+
+  it("gruppiert nach Schläger und sortiert nach Carry absteigend", () => {
+    const s = summarizeSession({
+      unit: "m", warnings: [],
+      shots: [{ club: "7 Iron", carry: 148 }, { club: "Driver", carry: 250 }, { club: "7 Eisen", carry: 150 }],
+    });
+    expect(s.clubs).toHaveLength(2); // 7 Iron + 7 Eisen = ein Schläger
+    expect(s.clubs[0].club).toBe("Driver"); // höchster Carry zuerst
+  });
+
+  it("respektiert minShots", () => {
+    const s = summarizeSession(
+      { unit: "m", warnings: [], shots: [{ club: "Driver", carry: 250 }] },
+      { minShots: 2 }
+    );
+    expect(s.clubs).toHaveLength(0);
   });
 });

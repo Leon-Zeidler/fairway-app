@@ -173,3 +173,107 @@ export function parseTrackmanCsv(text: string): ParsedCsv {
   }
   return { shots, unit, warnings };
 }
+
+/* ── Verdichtung ────────────────────────────────────────────────── */
+
+export interface TrackmanClubStat {
+  club: string; // repräsentativer Roh-Name
+  shots: number; dropped: number;
+  carryAvg: number; carryMin: number; carryMax: number; // Meter
+  clubSpeed?: number; ballSpeed?: number; smash?: number;
+  launch?: number; spin?: number;
+  attackAngle?: number; clubPath?: number; faceAngle?: number; faceToPath?: number;
+}
+
+export interface TrackmanSummary {
+  unit: "m"; sourceUnit: "m" | "yd"; warnings: string[];
+  clubs: TrackmanClubStat[]; totalShots: number;
+}
+
+export interface SummarizeOpts {
+  outlierBand?: number; // Schüsse außerhalb ±band×Median verwerfen (Default 0.4)
+  minShots?: number;    // Mindest-Schüsse pro Schläger (Default 1)
+}
+
+/** Eine gespeicherte, hochgeladene Trackman-Session (nur Zusammenfassung). */
+export interface TrackmanSession {
+  id: string;
+  date: string;        // ISO YYYY-MM-DD
+  label?: string;
+  summary: TrackmanSummary;
+  createdAt: string;   // ISO timestamp
+}
+
+function mean(xs: number[]): number { return xs.reduce((a, b) => a + b, 0) / xs.length; }
+function median(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function avgField(shots: TrackmanShot[], key: keyof TrackmanShot): number | undefined {
+  const xs = shots.map((s) => s[key]).filter((v): v is number => typeof v === "number");
+  return xs.length ? mean(xs) : undefined;
+}
+function round(v: number | undefined, digits: number): number | undefined {
+  if (v == null) return undefined;
+  const f = 10 ** digits;
+  return Math.round(v * f) / f;
+}
+
+export function summarizeSession(parsed: ParsedCsv, opts: SummarizeOpts = {}): TrackmanSummary {
+  const band = opts.outlierBand ?? 0.4;
+  const minShots = opts.minShots ?? 1;
+  const toM = parsed.unit === "yd" ? YARD_TO_M : 1;
+
+  const groups = new Map<string, TrackmanShot[]>();
+  for (const sh of parsed.shots) {
+    const key = normalizeClubName(sh.club);
+    const arr = groups.get(key) ?? [];
+    arr.push(sh);
+    groups.set(key, arr);
+  }
+
+  const clubs: TrackmanClubStat[] = [];
+  let totalShots = 0;
+
+  for (const arr of groups.values()) {
+    const withCarry = arr.filter((s) => typeof s.carry === "number");
+    if (withCarry.length < minShots) continue;
+    const med = median(withCarry.map((s) => (s.carry as number) * toM));
+    const lo = med * (1 - band);
+    const hi = med * (1 + band);
+    const kept = withCarry.filter((s) => {
+      const c = (s.carry as number) * toM;
+      return c >= lo && c <= hi;
+    });
+    const keptShots = kept.length ? kept : withCarry;
+    const carries = keptShots.map((s) => (s.carry as number) * toM);
+
+    // Repräsentativer Roh-Name = häufigster in der Gruppe
+    const nameCount = new Map<string, number>();
+    for (const s of arr) nameCount.set(s.club, (nameCount.get(s.club) ?? 0) + 1);
+    const club = [...nameCount.entries()].sort((a, b) => b[1] - a[1])[0][0];
+
+    clubs.push({
+      club,
+      shots: keptShots.length,
+      dropped: withCarry.length - keptShots.length,
+      carryAvg: Math.round(mean(carries)),
+      carryMin: Math.round(Math.min(...carries)),
+      carryMax: Math.round(Math.max(...carries)),
+      clubSpeed: round(avgField(keptShots, "clubSpeed"), 1),
+      ballSpeed: round(avgField(keptShots, "ballSpeed"), 1),
+      smash: round(avgField(keptShots, "smash"), 2),
+      launch: round(avgField(keptShots, "launch"), 1),
+      spin: round(avgField(keptShots, "spin"), 0),
+      attackAngle: round(avgField(keptShots, "attackAngle"), 1),
+      clubPath: round(avgField(keptShots, "clubPath"), 1),
+      faceAngle: round(avgField(keptShots, "faceAngle"), 1),
+      faceToPath: round(avgField(keptShots, "faceToPath"), 1),
+    });
+    totalShots += keptShots.length;
+  }
+
+  clubs.sort((a, b) => b.carryAvg - a.carryAvg);
+  return { unit: "m", sourceUnit: parsed.unit, warnings: parsed.warnings, clubs, totalShots };
+}
