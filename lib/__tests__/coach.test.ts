@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sanitizeActions } from "../coach";
+import { sanitizeActions, sanitizeClubProposals } from "../coach";
 
 describe("sanitizeActions — set_program with structured steps", () => {
   it("akzeptiert Step-Objekte und droppt steps ohne Namen", () => {
@@ -85,5 +85,20 @@ describe("sanitizeActions — set_gear", () => {
   });
   it("verwirft ohne boolean available", () => {
     expect(sanitizeActions([{ type: "set_gear", match: "band" }])).toHaveLength(0);
+  });
+});
+
+describe("sanitizeClubProposals", () => {
+  it("behält gültige Vorschläge und füllt optionale Felder", () => {
+    const out = sanitizeClubProposals([
+      { name: "7 Eisen", newDistance: "148 m", carryAvg: 148, shots: 12, reason: "stabil" },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: "7 Eisen", newDistance: "148 m", carryAvg: 148, shots: 12 });
+  });
+  it("verwirft Einträge ohne name oder newDistance", () => {
+    expect(sanitizeClubProposals([{ name: "7 Eisen" }])).toHaveLength(0);
+    expect(sanitizeClubProposals([{ newDistance: "148 m" }])).toHaveLength(0);
+    expect(sanitizeClubProposals("kaputt")).toHaveLength(0);
   });
 });

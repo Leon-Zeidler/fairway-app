@@ -2,6 +2,7 @@
 // Der OpenAI-Key lebt NUR serverseitig (app/api/coach/route.ts).
 
 import { GearId, Profile, Step } from "./types";
+import { TrackmanSummary } from "./trackman";
 import { GEAR_IDS } from "./gear";
 
 export type ActivityKey =
@@ -70,9 +71,27 @@ export type CoachAction =
   | { type: "remove_program_step"; id: string; index: number }
   | { type: "set_gear"; match: string; available: boolean };
 
+/** Ein Distanz-Vorschlag aus einer Trackman-Analyse (zur Bestätigung, nicht auto-übernommen). */
+export interface ClubProposal {
+  name: string;          // Ziel-Bag-Schlägername, z.B. "7 Eisen"
+  newDistance: string;   // Vorschlag als Freitext, z.B. "148 m"
+  oldDistance?: string;  // von der KI gespiegelt; die Karte nutzt den Live-Wert aus dem clubs-Store
+  carryAvg?: number;     // Meter
+  shots?: number;
+  reason?: string;
+}
+
+/** Kompakte Vorsession für Trends (an die KI gegeben). */
+export interface TrackmanHistoryEntry {
+  date: string;
+  carryByClub: Record<string, number>; // kanonischer Schlüssel (normalizeClubName) → Carry-Ø (m)
+  clubSpeedAvg?: number;
+}
+
 export interface CoachResponse {
   reply: string;
   actions: CoachAction[];
+  clubProposals?: ClubProposal[];
   notConfigured?: boolean;
   error?: string;
 }
@@ -110,6 +129,8 @@ export interface CoachContext {
   insights: string[];
   mentalCheck: string[];
   today: string;
+  trackmanUpload?: TrackmanSummary;
+  trackmanHistory?: TrackmanHistoryEntry[];
 }
 
 /* ── Aktionskatalog für den System-Prompt ───────────────────────── */
@@ -366,6 +387,28 @@ export function sanitizeActions(raw: unknown): CoachAction[] {
         break;
       }
     }
+  }
+  return out;
+}
+
+/** Filtert ungültige Distanz-Vorschläge heraus. */
+export function sanitizeClubProposals(raw: unknown): ClubProposal[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ClubProposal[] = [];
+  for (const p of raw) {
+    if (!p || typeof p !== "object") continue;
+    const o = p as Record<string, unknown>;
+    const name = str(o.name);
+    const newDistance = str(o.newDistance);
+    if (!name || !newDistance) continue;
+    out.push({
+      name,
+      newDistance,
+      oldDistance: str(o.oldDistance),
+      carryAvg: num(o.carryAvg),
+      shots: num(o.shots),
+      reason: str(o.reason),
+    });
   }
   return out;
 }
