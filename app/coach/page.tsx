@@ -118,7 +118,7 @@ function TrackmanCard({
   if (msg.applied) {
     return (
       <div className="tm-card done">
-        <div className="ca-title">✓ Übernommen</div>
+        <div className="ca-title">{msg.undone ? "Rückgängig gemacht" : "✓ Übernommen"}</div>
         {msg.undo && (
           <button className="ca-undo" type="button" onClick={() => onUndo(index, msg.undo!)}>
             <Icon name="reset" size={14} /> Rückgängig
@@ -395,12 +395,8 @@ export default function Coach() {
     const snap = snapshot();
     const created: string[] = [];
     for (const p of picks) {
-      const needle = p.name.toLowerCase();
-      const club = clubs.items.find(
-        (c) =>
-          c.name.toLowerCase().includes(needle) ||
-          needle.includes(c.name.toLowerCase())
-      );
+      const needle = normalizeClubName(p.name);
+      const club = clubs.items.find((c) => normalizeClubName(c.name) === needle);
       if (club) clubs.update(club.id, { distance: p.newDistance });
     }
     acts.forEach((a) => applyOne(a, created));
@@ -645,9 +641,7 @@ export default function Coach() {
                   index={i}
                   currentDistance={(n) =>
                     clubs.items.find(
-                      (c) =>
-                        c.name.toLowerCase().includes(n.toLowerCase()) ||
-                        n.toLowerCase().includes(c.name.toLowerCase())
+                      (c) => normalizeClubName(c.name) === normalizeClubName(n)
                     )?.distance ?? "—"
                   }
                   trendFor={(n) => {
