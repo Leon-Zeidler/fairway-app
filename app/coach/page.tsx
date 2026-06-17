@@ -411,6 +411,13 @@ export default function Coach() {
       ]);
       return;
     }
+    if (isPdf && file.size > 3.6 * 1024 * 1024) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "Das PDF ist zu groß (über ~3,5 MB). Mach am besten einen Screenshot der Trackman-Übersicht — das liest sich zuverlässiger." },
+      ]);
+      return;
+    }
 
     setExtracting(true);
     let summary: TrackmanSummary | null = null;
@@ -764,7 +771,7 @@ export default function Coach() {
         <button
           type="button"
           className="composer-attach"
-          aria-label="Trackman-CSV hochladen"
+          aria-label="Trackman-Daten hochladen (CSV, PDF oder Foto)"
           disabled={loading || extracting}
           onClick={() => fileRef.current?.click()}
         >
