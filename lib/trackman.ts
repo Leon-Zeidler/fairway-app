@@ -277,3 +277,53 @@ export function summarizeSession(parsed: ParsedCsv, opts: SummarizeOpts = {}): T
   clubs.sort((a, b) => b.carryAvg - a.carryAvg);
   return { unit: "m", sourceUnit: parsed.unit, warnings: parsed.warnings, clubs, totalShots };
 }
+
+/* ── KI-Extraktion (Bild/PDF/CSV-Text) ──────────────────────────── */
+
+/** Roh-Daten, die die KI aus Bild/PDF/Text liefert (vor Validierung). */
+export interface ExtractedClub {
+  club: string;
+  carry?: number;
+  shots?: number;
+  clubSpeed?: number; ballSpeed?: number; smash?: number;
+  launch?: number; spin?: number;
+  attackAngle?: number; clubPath?: number; faceAngle?: number; faceToPath?: number;
+}
+
+function numOrUndef(v: unknown): number | undefined {
+  return typeof v === "number" && isFinite(v) ? v : undefined;
+}
+
+/** Validiert/koerziert KI-extrahierte Clubs zu einer TrackmanSummary (Carry → Meter). */
+export function buildExtractedSummary(
+  clubs: ExtractedClub[],
+  sourceUnit: "m" | "yd",
+  warnings: string[] = []
+): TrackmanSummary {
+  const toM = sourceUnit === "yd" ? YARD_TO_M : 1;
+  const out: TrackmanClubStat[] = [];
+  for (const c of clubs) {
+    if (!c || typeof c.club !== "string" || !c.club.trim()) continue;
+    if (typeof c.carry !== "number" || !isFinite(c.carry) || c.carry <= 0) continue;
+    const carry = Math.round(c.carry * toM);
+    out.push({
+      club: c.club.trim(),
+      shots: typeof c.shots === "number" && c.shots > 0 ? Math.round(c.shots) : 0,
+      dropped: 0,
+      carryAvg: carry,
+      carryMin: carry,
+      carryMax: carry,
+      clubSpeed: numOrUndef(c.clubSpeed),
+      ballSpeed: numOrUndef(c.ballSpeed),
+      smash: numOrUndef(c.smash),
+      launch: numOrUndef(c.launch),
+      spin: numOrUndef(c.spin),
+      attackAngle: numOrUndef(c.attackAngle),
+      clubPath: numOrUndef(c.clubPath),
+      faceAngle: numOrUndef(c.faceAngle),
+      faceToPath: numOrUndef(c.faceToPath),
+    });
+  }
+  out.sort((a, b) => b.carryAvg - a.carryAvg);
+  return { unit: "m", sourceUnit, warnings, clubs: out, totalShots: out.reduce((s, c) => s + c.shots, 0) };
+}

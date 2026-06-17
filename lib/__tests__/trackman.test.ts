@@ -125,3 +125,30 @@ describe("summarizeSession", () => {
     expect(s.clubs).toHaveLength(0);
   });
 });
+
+import { buildExtractedSummary } from "../trackman";
+
+describe("buildExtractedSummary", () => {
+  it("baut Summary aus extrahierten Clubs, rechnet Yards in Meter, sortiert", () => {
+    const s = buildExtractedSummary(
+      [
+        { club: "7 Iron", carry: 160, clubSpeed: 85, smash: 1.4 },
+        { club: "Driver", carry: 250 },
+        { club: "Kaputt" }, // ohne carry → raus
+      ],
+      "yd"
+    );
+    expect(s.unit).toBe("m");
+    expect(s.sourceUnit).toBe("yd");
+    expect(s.clubs).toHaveLength(2);
+    expect(s.clubs[0].club).toBe("Driver"); // höchster Carry zuerst
+    const seven = s.clubs.find((c) => c.club === "7 Iron")!;
+    expect(seven.carryAvg).toBe(146); // 160*0.9144=146.3 → 146
+    expect(seven.carryMin).toBe(seven.carryAvg);
+    expect(seven.clubSpeed).toBe(85);
+  });
+  it("liefert leere clubs bei Müll", () => {
+    expect(buildExtractedSummary([], "m").clubs).toHaveLength(0);
+    expect(buildExtractedSummary([{ club: "X" }], "m").clubs).toHaveLength(0);
+  });
+});
