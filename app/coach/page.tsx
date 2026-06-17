@@ -44,8 +44,10 @@ import {
   parseTrackmanCsv,
   summarizeSession,
   normalizeClubName,
+  buildExtractedSummary,
   TrackmanSummary,
   TrackmanSession,
+  ExtractedClub,
 } from "@/lib/trackman";
 import Icon from "@/app/components/Icon";
 
@@ -92,6 +94,62 @@ function locateStep(
     n -= sections[si].steps.length;
   }
   return null;
+}
+
+/** Liest eine Datei als Data-URL (base64). */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+/** Verkleinert ein Bild (längste Kante <= maxDim) als JPEG, um Upload/Kosten zu senken. */
+async function downscaleImage(dataUrl: string, maxDim = 1600): Promise<string> {
+  try {
+    const img = document.createElement("img");
+    await new Promise<void>((res, rej) => {
+      img.onload = () => res();
+      img.onerror = () => rej(new Error("img load failed"));
+      img.src = dataUrl;
+    });
+    const longest = Math.max(img.width, img.height);
+    const scale = longest > maxDim ? maxDim / longest : 1;
+    if (scale >= 1) return dataUrl;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch {
+    return dataUrl;
+  }
+}
+
+/** Ruft /api/trackman auf und baut eine TrackmanSummary; null nur bei Netz-/Parsefehler. */
+async function extractViaApi(payload: {
+  image?: string;
+  pdf?: string;
+  text?: string;
+}): Promise<TrackmanSummary | null> {
+  try {
+    const res = await fetch("/api/trackman", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data || !Array.isArray(data.clubs)) return null;
+    const sourceUnit = data.sourceUnit === "yd" ? "yd" : "m";
+    const warnings = Array.isArray(data.warnings) ? (data.warnings as string[]) : [];
+    return buildExtractedSummary(data.clubs as ExtractedClub[], sourceUnit, warnings);
+  } catch {
+    return null;
+  }
 }
 
 function TrackmanCard({
@@ -197,6 +255,7 @@ export default function Coach() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -335,29 +394,54 @@ export default function Coach() {
     });
   }
 
-  /** Datei-Upload: CSV parsen, Session speichern, Analyse anstoßen. */
+  /** Datei-Upload: CSV/PDF/Bild lesen, Daten extrahieren, Session speichern, Analyse anstoßen. */
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // gleiche Datei erneut wählbar
-    if (!file || loading) return;
-    let summary: TrackmanSummary;
+    if (!file || loading || extracting) return;
+
+    const name = file.name.toLowerCase();
+    const isCsv = file.type.includes("csv") || name.endsWith(".csv");
+    const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
+    const isImage = file.type.startsWith("image/");
+    if (!isCsv && !isPdf && !isImage) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "Dieses Format kann ich nicht lesen — nimm eine CSV, ein PDF oder einen Screenshot/Foto." },
+      ]);
+      return;
+    }
+
+    setExtracting(true);
+    let summary: TrackmanSummary | null = null;
     try {
-      const text = await file.text();
-      summary = summarizeSession(parseTrackmanCsv(text));
+      if (isCsv) {
+        const text = await file.text();
+        const parsed = summarizeSession(parseTrackmanCsv(text));
+        // Parser zuerst (präzise/gratis); findet er nichts → KI liest den CSV-Text.
+        summary = parsed.clubs.length ? parsed : await extractViaApi({ text: text.slice(0, 20000) });
+      } else if (isImage) {
+        const dataUrl = await downscaleImage(await fileToDataUrl(file));
+        summary = await extractViaApi({ image: dataUrl });
+      } else {
+        const dataUrl = await fileToDataUrl(file);
+        summary = await extractViaApi({ pdf: dataUrl });
+      }
     } catch {
+      summary = null;
+    } finally {
+      setExtracting(false);
+    }
+
+    if (!summary || !summary.clubs.length) {
+      const warn = summary?.warnings?.length ? " (" + summary.warnings.join("; ") + ")" : "";
       setMsgs((m) => [
         ...m,
-        { role: "assistant", content: "Ich konnte die Datei nicht lesen — lade die Trackman-CSV nochmal hoch." },
+        { role: "assistant", content: "Ich konnte daraus keine Schläger-Daten lesen." + warn + " Tipp: ein scharfer Screenshot der Trackman-Übersicht klappt am besten." },
       ]);
       return;
     }
-    if (!summary.clubs.length) {
-      setMsgs((m) => [
-        ...m,
-        { role: "assistant", content: "Aus dieser CSV konnte ich keine Schläger lesen — ist das ein Trackman-Session-Export (mit Club- und Carry-Spalte)?" },
-      ]);
-      return;
-    }
+
     const history = buildTrackmanHistory(); // VOR dem Speichern → ohne die neue Session
     trackman.add({
       id: uid("tm"),
@@ -592,8 +676,9 @@ export default function Coach() {
             <div className="sub">
               Erzähl mir, wie's läuft oder was du brauchst. Ich kenne dein Bag,
               deinen Plan und deine letzten Sessions — und passe sie auf Wunsch
-              direkt an. Tipp: 📎 lädt deine Trackman-CSV hoch, dann passe ich
-              deine Distanzen an.
+              direkt an. Tipp: 📎 lädt Trackman-Daten hoch — CSV, PDF oder ein
+              Screenshot/Foto deiner Range-Übersicht. Ich lese die Distanzen aus
+              und passe deine Bag an.
             </div>
             {SUGGESTIONS.map((s) => (
               <button
@@ -657,7 +742,7 @@ export default function Coach() {
               )}
             </div>
           ))}
-          {loading && (
+          {(loading || extracting) && (
             <div className="chat-msg ai typing">
               <span></span>
               <span></span>
@@ -672,7 +757,7 @@ export default function Coach() {
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,text/csv,image/*,application/pdf"
           hidden
           onChange={onFile}
         />
@@ -680,7 +765,7 @@ export default function Coach() {
           type="button"
           className="composer-attach"
           aria-label="Trackman-CSV hochladen"
-          disabled={loading}
+          disabled={loading || extracting}
           onClick={() => fileRef.current?.click()}
         >
           <Icon name="upload" size={20} />
@@ -697,7 +782,7 @@ export default function Coach() {
           type="button"
           className="composer-send"
           aria-label="Senden"
-          disabled={!input.trim() || loading}
+          disabled={!input.trim() || loading || extracting}
           onClick={() => send(input)}
         >
           <Icon name="chevron" size={20} />
