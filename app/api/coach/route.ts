@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   buildSystemPrompt,
   sanitizeActions,
+  sanitizeClubProposals,
   ChatMessage,
   CoachContext,
   CoachResponse,
@@ -111,14 +112,16 @@ export async function POST(req: Request) {
       const content: string = data?.choices?.[0]?.message?.content ?? "{}";
       let reply = "…";
       let actions = sanitizeActions([]);
+      let clubProposals = sanitizeClubProposals([]);
       try {
         const obj = JSON.parse(content);
         if (typeof obj.reply === "string") reply = obj.reply;
         actions = sanitizeActions(obj.actions);
+        clubProposals = sanitizeClubProposals(obj.clubProposals);
       } catch {
         reply = content || "…";
       }
-      return NextResponse.json<CoachResponse>({ reply, actions });
+      return NextResponse.json<CoachResponse>({ reply, actions, clubProposals });
     } catch (e) {
       console.error("[coach] fetch failed", model, (e as Error).message);
       lastStatus = -1;
