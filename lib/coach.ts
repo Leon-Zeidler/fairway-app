@@ -197,6 +197,17 @@ Regeln für actions:
 `.trim();
 
 export function buildSystemPrompt(ctx: CoachContext): string {
+  const trackmanBlock = ctx.trackmanUpload
+    ? `
+
+TRACKMAN-UPLOAD: Leon hat gerade eine Trackman-Session hochgeladen (context.trackmanUpload — carryAvg pro Schläger bereits in METERN, plus clubSpeed/ballSpeed/smash/launch/spin/attackAngle/clubPath/faceAngle/faceToPath; context.trackmanHistory = frühere Sessions).
+Deine Aufgaben:
+1. Aktualisierte Carry-Distanzen vorschlagen → Array "clubProposals". Für jeden Schläger mit shots >= 3 und spürbarem Unterschied zur aktuellen Bag-Distanz EIN Eintrag. Mappe den Trackman-Namen auf den passenden Bag-Schläger aus context.clubs ("7 Iron"→"7 Eisen", "Pitching Wedge"→"PW", "Sand Wedge"→passender Wedge). Nutze die GELIEFERTEN carryAvg-Werte (NICHT selbst rechnen). Kein passender Bag-Schläger → weglassen.
+   Format: [{"name":"7 Eisen","newDistance":"148 m","carryAvg":148,"shots":12,"reason":"kurz, warum"}]
+2. Im "reply" die Schwungdaten kurz deuten (clubPath/faceAngle/attackAngle/smash/spin) und Trends aus trackmanHistory benennen (z.B. Club-Speed-Entwicklung). Bei klarem Muster (z.B. clubPath stark positiv → "over the top") darfst du zusätzlich set_focus/add_next_step in "actions" vorschlagen.
+3. Falls context.trackmanUpload.warnings nicht leer ist (z.B. Einheit angenommen), im reply erwähnen.`
+    : "";
+
   return `Du bist Leons persönlicher Golf-Coach in seiner Trainings-App "Fairway".
 
 Über Leon: 18, ~1 Jahr Golf, ~100-105 mph Schwung, will langfristig Pro/kompetitiver Amateur werden.
@@ -210,8 +221,9 @@ Du kennst seinen kompletten aktuellen Stand (JSON — nutze ALLES davon):
 ${JSON.stringify(ctx, null, 2)}
 
 ${ACTION_CATALOG}
+${trackmanBlock}
 
-Antworte AUSSCHLIESSLICH als JSON: {"reply": "<deine Antwort auf Deutsch>", "actions": [<0..n Aktionen>]}. Kein Text außerhalb des JSON.`;
+Antworte AUSSCHLIESSLICH als JSON: {"reply": "<deine Antwort auf Deutsch>", "actions": [<0..n Aktionen>], "clubProposals": [<0..n Distanz-Vorschläge, NUR bei Trackman-Upload, sonst []>]}. Kein Text außerhalb des JSON.`;
 }
 
 /* ── Validierung/Säuberung der KI-Aktionen (serverseitig) ───────── */
