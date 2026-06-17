@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import {
   Club,
   EquipItem,
@@ -36,8 +36,17 @@ import {
   CoachAction,
   CoachContext,
   CoachResponse,
+  ClubProposal,
+  TrackmanHistoryEntry,
   describeAction,
 } from "@/lib/coach";
+import {
+  parseTrackmanCsv,
+  summarizeSession,
+  normalizeClubName,
+  TrackmanSummary,
+  TrackmanSession,
+} from "@/lib/trackman";
 import Icon from "@/app/components/Icon";
 
 interface UndoToken {
@@ -60,6 +69,9 @@ interface Msg extends ChatMessage {
   actions?: CoachAction[];
   undo?: UndoToken;
   undone?: boolean;
+  clubProposals?: ClubProposal[]; // Trackman: zur Bestätigung
+  trackman?: boolean;             // markiert eine Trackman-Antwort
+  applied?: boolean;              // Karte bereits übernommen
 }
 
 const SUGGESTIONS = [
@@ -82,6 +94,92 @@ function locateStep(
   return null;
 }
 
+function TrackmanCard({
+  msg,
+  index,
+  currentDistance,
+  trendFor,
+  onApply,
+  onUndo,
+}: {
+  msg: Msg;
+  index: number;
+  currentDistance: (name: string) => string;
+  trendFor: (name: string) => number[];
+  onApply: (index: number, picks: ClubProposal[], acts: CoachAction[]) => void;
+  onUndo: (index: number, token: UndoToken) => void;
+}) {
+  const proposals = msg.clubProposals ?? [];
+  const acts = msg.actions ?? [];
+  const [pick, setPick] = useState<boolean[]>(() => proposals.map(() => true));
+  const [pickAct, setPickAct] = useState<boolean[]>(() => acts.map(() => true));
+  if (!proposals.length && !acts.length) return null;
+
+  if (msg.applied) {
+    return (
+      <div className="tm-card done">
+        <div className="ca-title">✓ Übernommen</div>
+        {msg.undo && (
+          <button className="ca-undo" type="button" onClick={() => onUndo(index, msg.undo!)}>
+            <Icon name="reset" size={14} /> Rückgängig
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="tm-card">
+      <div className="ca-title">Vorschlag — du bestätigst</div>
+      {proposals.map((p, i) => {
+        const trend = trendFor(p.name);
+        return (
+          <label className="tm-row" key={i}>
+            <input
+              type="checkbox"
+              checked={pick[i]}
+              onChange={() => setPick((a) => a.map((v, j) => (j === i ? !v : v)))}
+            />
+            <span className="tm-club">{p.name}</span>
+            <span className="tm-delta">
+              {currentDistance(p.name)} → <b>{p.newDistance}</b>
+            </span>
+            {p.reason && <span className="tm-reason">{p.reason}</span>}
+            {trend.length > 1 && (
+              <span className="tm-trend">{trend.join(" → ")} m</span>
+            )}
+          </label>
+        );
+      })}
+      {acts.map((a, i) => (
+        <label className="tm-row" key={`a${i}`}>
+          <input
+            type="checkbox"
+            checked={pickAct[i]}
+            onChange={() => setPickAct((x) => x.map((v, j) => (j === i ? !v : v)))}
+          />
+          <span className="tm-act">
+            <Icon name="target" size={12} /> {describeAction(a)}
+          </span>
+        </label>
+      ))}
+      <button
+        className="tm-apply"
+        type="button"
+        onClick={() =>
+          onApply(
+            index,
+            proposals.filter((_, i) => pick[i]),
+            acts.filter((_, i) => pickAct[i])
+          )
+        }
+      >
+        Übernehmen
+      </button>
+    </div>
+  );
+}
+
 export default function Coach() {
   const focus = useObject<Focus>("focus", FOCUS);
   const plan = useObject<Record<string, number[]>>("plan", PLAN);
@@ -93,12 +191,14 @@ export default function Coach() {
   const weekLog = useObject<Record<string, string[]>>("weekLog", {});
   const overrides = useObject<ProgramOverrides>("programOverrides", {});
   const gear = useCollection<GearItem>("gear", GEAR);
+  const trackman = useCollection<TrackmanSession>("trackmanSessions", []);
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getSessions().then(setSessions).catch(() => {});
@@ -166,10 +266,16 @@ export default function Coach() {
     };
   }
 
-  async function send(text: string) {
+  async function send(
+    text: string,
+    tm?: { upload: TrackmanSummary; history: TrackmanHistoryEntry[] }
+  ) {
     const clean = text.trim();
-    if (!clean || loading) return;
-    const next: Msg[] = [...msgs, { role: "user", content: clean }];
+    if ((!clean && !tm) || loading) return;
+    const userContent =
+      clean ||
+      "📊 Trackman-Session hochgeladen — analysier sie und pass meine Distanzen an.";
+    const next: Msg[] = [...msgs, { role: "user", content: userContent }];
     setMsgs(next);
     setInput("");
     setLoading(true);
@@ -179,17 +285,28 @@ export default function Coach() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: next.map((m) => ({ role: m.role, content: m.content })),
-          context: buildContext(),
+          context: {
+            ...buildContext(),
+            ...(tm ? { trackmanUpload: tm.upload, trackmanHistory: tm.history } : {}),
+          },
         }),
       });
       const data: CoachResponse = await res.json();
       const acts = data.actions?.length ? data.actions : undefined;
-      // Auto-übernehmen, sobald die Antwort da ist (mit Rückgängig-Token).
-      const undo = acts ? applyNow(acts) : undefined;
-      setMsgs((m) => [
-        ...m,
-        { role: "assistant", content: data.reply, actions: acts, undo },
-      ]);
+      const proposals = data.clubProposals?.length ? data.clubProposals : undefined;
+      if (tm) {
+        // Trackman: nichts auto-übernehmen — alles wandert in die Bestätigungs-Karte
+        setMsgs((m) => [
+          ...m,
+          { role: "assistant", content: data.reply, clubProposals: proposals, actions: acts, trackman: true },
+        ]);
+      } else {
+        const undo = acts ? applyNow(acts) : undefined;
+        setMsgs((m) => [
+          ...m,
+          { role: "assistant", content: data.reply, actions: acts, undo },
+        ]);
+      }
     } catch {
       setMsgs((m) => [
         ...m,
@@ -200,8 +317,59 @@ export default function Coach() {
     }
   }
 
-  function applyNow(actions: CoachAction[]): UndoToken {
-    const snapshot = {
+  /** Baut die kompakte Verlauf-Historie (kanonische Schlüssel) für den KI-Kontext. */
+  function buildTrackmanHistory(): TrackmanHistoryEntry[] {
+    return trackman.items.slice(-6).map((s) => {
+      const carryByClub: Record<string, number> = {};
+      for (const c of s.summary.clubs) carryByClub[normalizeClubName(c.club)] = c.carryAvg;
+      const speeds = s.summary.clubs
+        .map((c) => c.clubSpeed)
+        .filter((v): v is number => typeof v === "number");
+      return {
+        date: s.date,
+        carryByClub,
+        clubSpeedAvg: speeds.length
+          ? Math.round((speeds.reduce((a, b) => a + b, 0) / speeds.length) * 10) / 10
+          : undefined,
+      };
+    });
+  }
+
+  /** Datei-Upload: CSV parsen, Session speichern, Analyse anstoßen. */
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // gleiche Datei erneut wählbar
+    if (!file || loading) return;
+    let summary: TrackmanSummary;
+    try {
+      const text = await file.text();
+      summary = summarizeSession(parseTrackmanCsv(text));
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "Ich konnte die Datei nicht lesen — lade die Trackman-CSV nochmal hoch." },
+      ]);
+      return;
+    }
+    if (!summary.clubs.length) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "Aus dieser CSV konnte ich keine Schläger lesen — ist das ein Trackman-Session-Export (mit Club- und Carry-Spalte)?" },
+      ]);
+      return;
+    }
+    const history = buildTrackmanHistory(); // VOR dem Speichern → ohne die neue Session
+    trackman.add({
+      id: uid("tm"),
+      date: isoLocal(new Date()),
+      summary,
+      createdAt: new Date().toISOString(),
+    });
+    void send(input, { upload: summary, history });
+  }
+
+  function snapshot(): UndoToken["snapshot"] {
+    return {
       focus: focus.value,
       plan: plan.value,
       profile: profile.value,
@@ -213,9 +381,33 @@ export default function Coach() {
       overrides: overrides.value,
       gear: gear.items,
     };
+  }
+
+  function applyNow(actions: CoachAction[]): UndoToken {
+    const snap = snapshot();
     const createdSessions: string[] = [];
     actions.forEach((a) => applyOne(a, createdSessions));
-    return { snapshot, createdSessions };
+    return { snapshot: snap, createdSessions };
+  }
+
+  /** Übernimmt die abgehakten Distanz-Vorschläge + Aktionen einer Trackman-Karte. */
+  function applyProposals(index: number, picks: ClubProposal[], acts: CoachAction[]) {
+    const snap = snapshot();
+    const created: string[] = [];
+    for (const p of picks) {
+      const needle = p.name.toLowerCase();
+      const club = clubs.items.find(
+        (c) =>
+          c.name.toLowerCase().includes(needle) ||
+          needle.includes(c.name.toLowerCase())
+      );
+      if (club) clubs.update(club.id, { distance: p.newDistance });
+    }
+    acts.forEach((a) => applyOne(a, created));
+    const token: UndoToken = { snapshot: snap, createdSessions: created };
+    setMsgs((m) =>
+      m.map((x, i) => (i === index ? { ...x, applied: true, undo: token } : x))
+    );
   }
 
   function undo(index: number, token: UndoToken) {
@@ -404,7 +596,8 @@ export default function Coach() {
             <div className="sub">
               Erzähl mir, wie's läuft oder was du brauchst. Ich kenne dein Bag,
               deinen Plan und deine letzten Sessions — und passe sie auf Wunsch
-              direkt an.
+              direkt an. Tipp: 📎 lädt deine Trackman-CSV hoch, dann passe ich
+              deine Distanzen an.
             </div>
             {SUGGESTIONS.map((s) => (
               <button
@@ -425,7 +618,7 @@ export default function Coach() {
               <div className={`chat-msg ${m.role === "user" ? "user" : "ai"}`}>
                 {m.content}
               </div>
-              {m.actions && (
+              {m.actions && !m.trackman && (
                 <div className={`chat-actions ${m.undone ? "undone" : ""}`}>
                   <div className="ca-title">
                     {m.undone ? "Rückgängig gemacht" : "✓ Automatisch übernommen"}
@@ -446,6 +639,28 @@ export default function Coach() {
                   )}
                 </div>
               )}
+              {m.trackman && (
+                <TrackmanCard
+                  msg={m}
+                  index={i}
+                  currentDistance={(n) =>
+                    clubs.items.find(
+                      (c) =>
+                        c.name.toLowerCase().includes(n.toLowerCase()) ||
+                        n.toLowerCase().includes(c.name.toLowerCase())
+                    )?.distance ?? "—"
+                  }
+                  trendFor={(n) => {
+                    const key = normalizeClubName(n);
+                    return trackman.items
+                      .map((s) => s.summary.clubs.find((c) => normalizeClubName(c.club) === key)?.carryAvg)
+                      .filter((v): v is number => typeof v === "number")
+                      .slice(-4);
+                  }}
+                  onApply={applyProposals}
+                  onUndo={undo}
+                />
+              )}
             </div>
           ))}
           {loading && (
@@ -460,6 +675,22 @@ export default function Coach() {
       </div>
 
       <div className="composer">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".csv,text/csv"
+          hidden
+          onChange={onFile}
+        />
+        <button
+          type="button"
+          className="composer-attach"
+          aria-label="Trackman-CSV hochladen"
+          disabled={loading}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Icon name="upload" size={20} />
+        </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

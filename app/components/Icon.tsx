@@ -15,7 +15,8 @@ export type IconName =
   | "target"
   | "image"
   | "coach"
-  | "play";
+  | "play"
+  | "upload";
 
 const PATHS: Record<IconName, JSX.Element> = {
   // Haus / Heute
@@ -87,6 +88,13 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M10 8.5l5 3.5-5 3.5z" />
+    </>
+  ),
+  // Upload / Anhang (Pfeil in Ablage)
+  upload: (
+    <>
+      <path d="M12 15V4M8.5 7.5 12 4l3.5 3.5" />
+      <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,
