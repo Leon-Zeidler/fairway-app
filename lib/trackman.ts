@@ -1,12 +1,12 @@
 // Trackman-CSV einlesen & pro Schläger verdichten.
 // Reine Funktionen (kein React, keine Seiteneffekte) → voll unit-testbar.
 
-const YARD_TO_M = 0.9144;
+const YARD_TO_M = 0.9144; // wird ab Task 2/3 für Yard→Meter genutzt
 
 /** Bringt Trackman- und Bag-Namen auf einen kanonischen Schlüssel zusammen,
  *  damit derselbe Schläger über Sessions/Quellen hinweg zusammenfindet. */
 export function normalizeClubName(name: string): string {
-  const s = name.toLowerCase().replace(/\s+/g, " ").trim();
+  const s = name.toLowerCase().replace(/[-\s]+/g, " ").trim();
   if (/\bdriver\b|\bdr\b/.test(s)) return "driver";
 
   // Grad-Wedges (48–64°), wenn nicht klar Eisen/Holz/Hybrid
