@@ -391,3 +391,17 @@ export function deriveRoundFields(
     penalties: hasPenalties ? penalties : undefined,
   };
 }
+
+/* ── Gleitendes Fenster der letzten Runden ───────────────────────── */
+
+/**
+ * Jüngste `n` Platz-Runden mit erfassbaren Stats, absteigend nach Datum.
+ * Basis für die gleitende KI-Auswertung (statt „alle Runden").
+ */
+export function recentRoundsWindow(sessions: Session[], n = 10): Session[] {
+  return sessions
+    .filter(hasRoundStats)
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, n);
+}
