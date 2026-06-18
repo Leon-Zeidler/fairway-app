@@ -128,8 +128,11 @@ export function roundInsightsFrom(
   windowN = 10
 ): RoundInsights | undefined {
   // Runden mit Loch-Daten aber ohne abgeleitete Summenfelder enrichen (z.B. nach Scorekarten-Eingabe).
+  // Runden mit bereits vorhandenen Summenfeldern (strokes != null) werden NICHT neu berechnet,
+  // damit vorhandene Werte nicht durch undefined überschrieben werden.
   const enriched = sessions.map((s) => {
     if (s.type !== "course" || !s.holes?.length || !s.courseId) return s;
+    if (s.strokes != null) return s; // Summenfelder bereits vorhanden — unveränderter Durchreichen
     const course = courseById(courses, s.courseId);
     if (!course) return s;
     const derived = deriveRoundFields(course, s.holes);

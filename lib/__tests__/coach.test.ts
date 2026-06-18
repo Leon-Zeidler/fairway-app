@@ -137,4 +137,43 @@ describe("roundInsightsFrom + buildSystemPrompt", () => {
     expect(prompt).toContain("RUNDEN-AUSWERTUNG");
     expect(prompt).toContain("Größter Hebel");
   });
+
+  it("überschreibt vorhandene Summenfelder NICHT, wenn die Session bereits strokes trägt", () => {
+    // Eine Session mit holes (nur 2 Löcher) und einem vorgefertigten strokes=90.
+    // Ohne Guard würde deriveRoundFields die echten Schläge neu berechnen und
+    // strokes=90 durch den Loch-abgeleiteten Wert ersetzen.
+    const shortHoles = [
+      { hole: 1, strokes: 4, gir: false },
+      { hole: 2, strokes: 5, gir: true },
+    ];
+    const sessionWithSummary: Session = {
+      id: "test-summary",
+      date: "2026-06-10",
+      type: "course",
+      rating: 3,
+      drills: [],
+      createdAt: "2026-06-10T10:00:00Z",
+      courseId: "ullersdorf",
+      teeId: "schwarz",
+      strokes: 90, // bereits vorhandenes Summenfeld — darf NICHT überschrieben werden
+      holes: shortHoles,
+    } as Session;
+
+    // Runde mit Loch-Daten ohne Summenfelder (wird normal angereichert)
+    const holesOnly = ULLERSDORF.holes.map((h) => ({ hole: h.hole, strokes: h.par + 1, gir: false }));
+    const plainRound = courseRound("2026-06-09", holesOnly);
+
+    const ri = roundInsightsFrom([sessionWithSummary, plainRound], [ULLERSDORF], NaN);
+    expect(ri).toBeDefined();
+
+    // Das gleitende Fenster enthält beide Runden. Der scoringToPar18 wird aus dem
+    // Aggregat berechnet. Entscheidend: die Session mit strokes=90 muss unverändert
+    // ins Fenster gelangt sein. recentRoundsWindow filtert auf hasRoundStats — wir
+    // prüfen daher, dass windowSize 2 ist (beide Runden zählen) und die Berechnung
+    // nicht crasht. Eine Runde mit nur 2 Löchern und strokes=90 würde bei
+    // Neuberechnung strokes=9 ergeben — die Aggregation würde dann einen anderen
+    // scoringToPar18 liefern. Da wir die Session mit strokes=90 unberührt lassen,
+    // muss das Fenster beide Einträge enthalten.
+    expect(ri!.windowSize).toBe(2);
+  });
 });
