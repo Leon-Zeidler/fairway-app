@@ -1,9 +1,12 @@
 // Geteilte Typen & Prompt-Bausteine für den KI-Coach.
 // Der OpenAI-Key lebt NUR serverseitig (app/api/coach/route.ts).
 
-import { GearId, Profile, Step } from "./types";
+import { GearId, Profile, Session, Step } from "./types";
 import { TrackmanSummary } from "./trackman";
 import { GEAR_IDS } from "./gear";
+import { Course, courseById, teeById, COURSES } from "./courses";
+import { aggregate, topFocus, recentRoundsWindow, deriveRoundFields } from "./golf";
+import { roundHandicap, estimateHandicap } from "./handicap";
 
 export type ActivityKey =
   | "mobility"
@@ -96,6 +99,83 @@ export interface CoachResponse {
   error?: string;
 }
 
+/** Verdichtete Runden-Auswertung (gleitendes Fenster) für den Coach. */
+export interface RoundInsights {
+  windowSize: number;
+  scoringToPar18: number | null;
+  girPct: number | null;
+  fairwayPct: number | null;
+  puttsPer18: number | null;
+  scramblingPct: number | null;
+  penaltiesPer18: number | null;
+  topFocus: {
+    key: string;
+    label: string;
+    valueText: string;
+    targetText: string;
+  } | null;
+  handicapEstimate: number | null;
+}
+
+/**
+ * Baut RoundInsights aus den Sessions: Aggregat über das gleitende Fenster,
+ * größter Hebel, und Handicap-Schätzung aus allen handicap-wirksamen Runden.
+ */
+export function roundInsightsFrom(
+  sessions: Session[],
+  courses: Course[] = COURSES,
+  baseHandicap = NaN,
+  windowN = 10
+): RoundInsights | undefined {
+  // Runden mit Loch-Daten aber ohne abgeleitete Summenfelder enrichen (z.B. nach Scorekarten-Eingabe).
+  const enriched = sessions.map((s) => {
+    if (s.type !== "course" || !s.holes?.length || !s.courseId) return s;
+    const course = courseById(courses, s.courseId);
+    if (!course) return s;
+    const derived = deriveRoundFields(course, s.holes);
+    return { ...s, ...derived };
+  });
+
+  const window = recentRoundsWindow(enriched, windowN);
+  if (window.length === 0) return undefined;
+
+  const agg = aggregate(window);
+  const tf = topFocus(agg);
+
+  // Handicap: Differentials aus allen Runden mit Loch-Daten (jüngste zuletzt).
+  const diffs: number[] = [];
+  const dated = enriched
+    .filter((s) => s.holes && s.holes.length && s.courseId)
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date));
+  for (const s of dated) {
+    const course = courseById(courses, s.courseId);
+    const tee = teeById(course, s.teeId);
+    if (!course || !tee) continue;
+    const rh = roundHandicap(course, tee, s.holes!, baseHandicap);
+    if (rh.counts && rh.differential != null) diffs.push(rh.differential);
+  }
+
+  return {
+    windowSize: window.length,
+    scoringToPar18: agg.scoringToPar18,
+    girPct: agg.girPct,
+    fairwayPct: agg.fairwayPct,
+    puttsPer18: agg.puttsPer18,
+    scramblingPct: agg.scramblingPct,
+    penaltiesPer18: agg.penaltiesPer18,
+    topFocus: tf
+      ? {
+          key: tf.key,
+          label: tf.label,
+          valueText: tf.valueText,
+          targetText: tf.targetText,
+        }
+      : null,
+    handicapEstimate: estimateHandicap(diffs),
+  };
+}
+
 export interface CoachContext {
   profile: Profile;
   focus: { title: string; why: string; cues: string[] };
@@ -131,6 +211,7 @@ export interface CoachContext {
   today: string;
   trackmanUpload?: TrackmanSummary;
   trackmanHistory?: TrackmanHistoryEntry[];
+  roundInsights?: RoundInsights;
 }
 
 /* ── Aktionskatalog für den System-Prompt ───────────────────────── */
@@ -209,6 +290,23 @@ Deine Aufgaben:
 3. Falls context.trackmanUpload.warnings nicht leer ist (z.B. Einheit angenommen), im reply erwähnen.`
     : "";
 
+  const ri = ctx.roundInsights;
+  const roundBlock = ri
+    ? `
+
+RUNDEN-AUSWERTUNG (gleitendes Fenster, letzte ${ri.windowSize} Runden, auf 18 normalisiert):
+- Score zu Par: ${ri.scoringToPar18 != null ? Math.round(ri.scoringToPar18) : "—"}
+- GIR: ${ri.girPct != null ? Math.round(ri.girPct * 100) + " %" : "—"}
+- Fairways: ${ri.fairwayPct != null ? Math.round(ri.fairwayPct * 100) + " %" : "—"}
+- Putts/Runde: ${ri.puttsPer18 != null ? ri.puttsPer18.toFixed(1) : "—"}
+- Scrambling: ${ri.scramblingPct != null ? Math.round(ri.scramblingPct * 100) + " %" : "—"}
+- Strafschläge/Runde: ${ri.penaltiesPer18 != null ? ri.penaltiesPer18.toFixed(1) : "—"}
+- Größter Hebel Richtung Scratch: ${ri.topFocus ? `${ri.topFocus.label} (aktuell ${ri.topFocus.valueText}, Ziel ${ri.topFocus.targetText})` : "—"}
+- Geschätztes Handicap: ${ri.handicapEstimate != null ? ri.handicapEstimate.toFixed(1) : "—"}
+
+Nutze den größten Hebel, um Fokus und Wochenplan gezielt anzupassen.`
+    : "";
+
   return `Du bist Leons persönlicher Golf-Coach in seiner Trainings-App "Fairway".
 
 Über Leon: 18, ~1 Jahr Golf, ~100-105 mph Schwung, will langfristig Pro/kompetitiver Amateur werden.
@@ -222,7 +320,7 @@ Du kennst seinen kompletten aktuellen Stand (JSON — nutze ALLES davon):
 ${JSON.stringify(ctx, null, 2)}
 
 ${ACTION_CATALOG}
-${trackmanBlock}
+${trackmanBlock}${roundBlock}
 
 Antworte AUSSCHLIESSLICH als JSON: {"reply": "<deine Antwort auf Deutsch>", "actions": [<0..n Aktionen>], "clubProposals": [<0..n Distanz-Vorschläge, NUR bei Trackman-Upload, sonst []>]}. Kein Text außerhalb des JSON.`;
 }

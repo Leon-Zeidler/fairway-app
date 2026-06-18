@@ -39,7 +39,9 @@ import {
   ClubProposal,
   TrackmanHistoryEntry,
   describeAction,
+  roundInsightsFrom,
 } from "@/lib/coach";
+import { COURSES } from "@/lib/courses";
 import {
   parseTrackmanCsv,
   summarizeSession,
@@ -322,6 +324,11 @@ export default function Coach() {
         day: "numeric",
         month: "long",
       }),
+      roundInsights: roundInsightsFrom(
+        sessions,
+        COURSES,
+        parseFloat(profile.value.hcp)
+      ),
     };
   }
 

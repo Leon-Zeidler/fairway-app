@@ -1,5 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { sanitizeActions, sanitizeClubProposals } from "../coach";
+import { sanitizeActions, sanitizeClubProposals, buildSystemPrompt, roundInsightsFrom } from "../coach";
+import { ULLERSDORF } from "../courses";
+import { Session } from "../types";
+
+function courseRound(date: string, holes: { hole: number; strokes: number; gir?: boolean }[]): Session {
+  return {
+    id: date, date, type: "course", rating: 3, drills: [],
+    createdAt: date + "T10:00:00Z",
+    courseId: "ullersdorf", teeId: "schwarz",
+    holes,
+  } as Session;
+}
 
 describe("sanitizeActions — set_program with structured steps", () => {
   it("akzeptiert Step-Objekte und droppt steps ohne Namen", () => {
@@ -100,5 +111,30 @@ describe("sanitizeClubProposals", () => {
     expect(sanitizeClubProposals([{ name: "7 Eisen" }])).toHaveLength(0);
     expect(sanitizeClubProposals([{ newDistance: "148 m" }])).toHaveLength(0);
     expect(sanitizeClubProposals("kaputt")).toHaveLength(0);
+  });
+});
+
+describe("roundInsightsFrom + buildSystemPrompt", () => {
+  it("liefert undefined ohne Runden", () => {
+    expect(roundInsightsFrom([], [ULLERSDORF], NaN)).toBeUndefined();
+  });
+
+  it("baut Insights aus einer 18-Loch-Runde", () => {
+    const holes = ULLERSDORF.holes.map((h) => ({
+      hole: h.hole, strokes: h.par + 1, gir: false,
+    }));
+    const ri = roundInsightsFrom([courseRound("2026-06-10", holes)], [ULLERSDORF], NaN);
+    expect(ri).toBeDefined();
+    expect(ri!.windowSize).toBe(1);
+    expect(ri!.scoringToPar18).not.toBeNull();
+  });
+
+  it("buildSystemPrompt bettet die Runden-Sektion ein, wenn roundInsights gesetzt ist", () => {
+    const holes = ULLERSDORF.holes.map((h) => ({ hole: h.hole, strokes: h.par + 1, gir: false }));
+    const ri = roundInsightsFrom([courseRound("2026-06-10", holes)], [ULLERSDORF], NaN);
+    // Minimal-Kontext: nur Pflichtfelder, die buildSystemPrompt nutzt, + roundInsights.
+    const prompt = buildSystemPrompt({ roundInsights: ri } as any);
+    expect(prompt).toContain("RUNDEN-AUSWERTUNG");
+    expect(prompt).toContain("Größter Hebel");
   });
 });
