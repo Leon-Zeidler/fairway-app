@@ -4,6 +4,16 @@
 
 export type SessionType = "range" | "course" | "gym" | "stretch";
 
+/** Ein einzelnes erfasstes Loch einer Runde. */
+export interface HoleScore {
+  hole: number; // 1..18
+  strokes: number; // Schläge auf diesem Loch
+  putts?: number;
+  fairway?: boolean; // Fairway getroffen (nur Par 4/5 sinnvoll)
+  gir?: boolean; // Grün in Regulation
+  penalties?: number; // Strafschläge auf diesem Loch
+}
+
 export interface Session {
   id: string;
   date: string; // ISO YYYY-MM-DD
@@ -18,7 +28,7 @@ export interface Session {
   user_id?: string | null; // für späteren Multi-User-Support
 
   // ── On-Course-Performance (optional, nur für type === "course") ──
-  holesPlayed?: 9 | 18; // gespielte Löcher
+  holesPlayed?: number; // gespielte Löcher (1..18; Teilrunden erlaubt)
   strokes?: number; // Brutto-Schläge gesamt
   coursePar?: number; // Par der gespielten Runde (z.B. 72 / 36)
   fairwaysHit?: number; // getroffene Fairways
@@ -28,6 +38,11 @@ export interface Session {
   scramblingMade?: number; // erfolgreiche Up&Downs (Grün verfehlt, trotzdem Par)
   scramblingTries?: number; // Up&Down-Versuche (= verfehlte Grüns)
   penalties?: number; // Strafschläge gesamt
+
+  // ── Loch-für-Loch-Erfassung (optional; z.B. Ullersdorf-Scorecard) ──
+  courseId?: string; // Referenz auf Course.id
+  teeId?: string; // Referenz auf CourseTee.id
+  holes?: HoleScore[]; // nur tatsächlich gespielte Löcher
 }
 
 export const SESSION_LABELS: Record<SessionType, string> = {

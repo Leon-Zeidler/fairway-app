@@ -1,7 +1,8 @@
 // Runden-Performance, Weg-zu-Scratch-Benchmarks & Schläger-Empfehlung.
 // Reine Funktionen (kein React) — leicht testbar.
 
-import { Session } from "./types";
+import { Session, HoleScore } from "./types";
+import { Course } from "./courses";
 
 /* ── Runden-Stats ────────────────────────────────────────────────── */
 
@@ -304,4 +305,89 @@ export function suggestClubs(
     .filter((c): c is { name: string; dist: number } => c.dist != null)
     .map((c) => ({ ...c, delta: c.dist - target }))
     .sort((a, b) => Math.abs(a.delta) - Math.abs(b.delta));
+}
+
+/* ── Loch-für-Loch → Summenfelder ableiten ──────────────────────── */
+
+/**
+ * Berechnet aus den erfassten Löchern die klassischen Session-Summenfelder.
+ * Nur Löcher mit Match im Course zählen. Optionale Werte (Putts/FW/GIR/Strafen)
+ * werden nur einbezogen, wenn vorhanden — fehlt z.B. jeder Putt-Wert, bleibt
+ * `putts` undefined (= „nicht erfasst").
+ */
+export function deriveRoundFields(
+  course: Course,
+  holes: HoleScore[]
+): Pick<
+  Session,
+  | "strokes"
+  | "coursePar"
+  | "fairwaysHit"
+  | "fairwaysPossible"
+  | "girHit"
+  | "putts"
+  | "scramblingMade"
+  | "scramblingTries"
+  | "penalties"
+  | "holesPlayed"
+> {
+  const byNum = new Map(course.holes.map((h) => [h.hole, h]));
+  const played = holes.filter((h) => byNum.has(h.hole));
+
+  let strokes = 0;
+  let coursePar = 0;
+  let fairwaysHit = 0;
+  let fairwaysPossible = 0;
+  let girHit = 0;
+  let putts = 0;
+  let hasPutts = false;
+  let scramblingMade = 0;
+  let scramblingTries = 0;
+  let penalties = 0;
+  let hasPenalties = false;
+  let hasFairway = false;
+  let hasGir = false;
+
+  for (const h of played) {
+    const def = byNum.get(h.hole)!;
+    strokes += h.strokes;
+    coursePar += def.par;
+
+    if (def.par >= 4 && h.fairway != null) {
+      fairwaysPossible += 1;
+      if (h.fairway) fairwaysHit += 1;
+      hasFairway = true;
+    }
+    if (h.gir != null) {
+      hasGir = true;
+      if (h.gir) {
+        girHit += 1;
+      } else {
+        // Grün verfehlt → Up&Down-Versuch; Erfolg wenn Score ≤ Par
+        scramblingTries += 1;
+        if (h.strokes <= def.par) scramblingMade += 1;
+      }
+    }
+    if (h.putts != null) {
+      putts += h.putts;
+      hasPutts = true;
+    }
+    if (h.penalties != null) {
+      penalties += h.penalties;
+      hasPenalties = true;
+    }
+  }
+
+  return {
+    holesPlayed: played.length,
+    strokes: played.length ? strokes : undefined,
+    coursePar: played.length ? coursePar : 0,
+    fairwaysHit: hasFairway ? fairwaysHit : undefined,
+    fairwaysPossible: hasFairway ? fairwaysPossible : undefined,
+    girHit: hasGir ? girHit : undefined,
+    putts: hasPutts ? putts : undefined,
+    scramblingMade: hasGir ? scramblingMade : undefined,
+    scramblingTries: hasGir ? scramblingTries : undefined,
+    penalties: hasPenalties ? penalties : undefined,
+  };
 }
