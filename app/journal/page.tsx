@@ -294,6 +294,16 @@ export default function Journal() {
   const maxWeek = Math.max(1, ...stats.weeks.map((w) => w.count));
   const maxScore = Math.max(1, ...stats.roundTrend.map((r) => r.score || 0));
 
+  // Ullersdorf-Runden aufsteigend nach Datum (für Trendansicht)
+  const ullersdorfRounds = useMemo(
+    () =>
+      sessions
+        .filter((s) => s.courseId === "ullersdorf")
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    [sessions]
+  );
+
   return (
     <>
       <header className="topbar">
@@ -806,6 +816,36 @@ export default function Journal() {
                 </>
               )}
             </div>
+            {/* Ullersdorf-Verlauf */}
+            {ullersdorfRounds.length > 0 && (
+              <div className="card">
+                <section className="ull-trend">
+                  <h2>Ullersdorf — Verlauf</h2>
+                  <ul>
+                    {ullersdorfRounds.map((s) => {
+                      const r = roundStats(s);
+                      return (
+                        <li key={s.id}>
+                          <span>{s.date}</span>
+                          <span>
+                            {r.holes} Löcher ·{" "}
+                            {r.toPar == null
+                              ? "—"
+                              : r.toPar === 0
+                              ? "E"
+                              : r.toPar > 0
+                              ? `+${r.toPar}`
+                              : r.toPar}{" "}
+                            zu Par
+                          </span>
+                          <span>{r.putts != null ? `${r.putts} Putts` : ""}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              </div>
+            )}
           </>
         )}
       </div>
