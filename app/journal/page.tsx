@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Session, SessionType, SESSION_LABELS } from "@/lib/types";
+import { Session, SessionType, SESSION_LABELS, HoleScore } from "@/lib/types";
 import { getSessions, addSession, deleteSession, computeStreak } from "@/lib/storage";
 import { uid } from "@/lib/store";
 import { BALL_BUCKETS } from "@/lib/seed";
 import { isoLocal, mondayOf } from "@/lib/plan";
-import { roundStats, hasRoundStats } from "@/lib/golf";
+import { roundStats, hasRoundStats, deriveRoundFields } from "@/lib/golf";
+import { COURSES, courseById } from "@/lib/courses";
 import Icon from "@/app/components/Icon";
 import ScratchCard from "@/app/components/ScratchCard";
 
@@ -48,6 +49,12 @@ export default function Journal() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Ullersdorf-Scorecard (Loch-für-Loch)
+  const [scorecard, setScorecard] = useState(false);
+  const [courseId, setCourseId] = useState("ullersdorf");
+  const [teeId] = useState("schwarz");
+  const [holeScores, setHoleScores] = useState<Record<number, HoleScore>>({});
+
   // Runden-Statistik (optional, nur Platz)
   const [showStats, setShowStats] = useState(false);
   const [holes, setHoles] = useState<9 | 18>(18);
@@ -74,6 +81,8 @@ export default function Journal() {
     setCourse("");
     setNotes("");
     setRating(3);
+    setScorecard(false);
+    setHoleScores({});
     setShowStats(false);
     setHoles(18);
     setStrokes("");
@@ -93,8 +102,23 @@ export default function Journal() {
       type === "course" && course.trim() ? course.trim() : "",
       notes.trim(),
     ].filter(Boolean);
+
+    // Loch-für-Loch-Modus: abgeleitete Felder berechnen
+    let derived: Partial<Session> = {};
+    let holesArr: HoleScore[] | undefined;
+    if (type === "course" && scorecard) {
+      const c = courseById(COURSES, courseId)!;
+      holesArr = Object.values(holeScores).filter((h) => h.strokes > 0);
+      derived = {
+        courseId,
+        teeId,
+        holes: holesArr,
+        ...deriveRoundFields(c, holesArr),
+      };
+    }
+
     const roundFields =
-      type === "course" && showStats
+      type === "course" && showStats && !scorecard
         ? {
             holesPlayed: holes,
             strokes: numOr(strokes),
@@ -120,6 +144,7 @@ export default function Journal() {
       createdAt: new Date().toISOString(),
       user_id: null,
       ...roundFields,
+      ...derived,
     };
     try {
       await addSession(s);
@@ -289,6 +314,80 @@ export default function Journal() {
                     onChange={(e) => setScore(e.target.value)}
                     placeholder="z.B. 28"
                   />
+
+                  {/* Ullersdorf-Scorecard-Umschalter */}
+                  <label className="row-toggle" style={{ marginTop: 14 }}>
+                    <input
+                      type="checkbox"
+                      checked={scorecard}
+                      onChange={(e) => setScorecard(e.target.checked)}
+                    />
+                    Ullersdorf-Scorecard (Loch für Loch)
+                  </label>
+
+                  {/* Loch-für-Loch-Eingabe */}
+                  {scorecard && (() => {
+                    const c = courseById(COURSES, courseId)!;
+                    const setHole = (holeNum: number, patch: Partial<HoleScore>) =>
+                      setHoleScores((prev) => {
+                        const existing: HoleScore = prev[holeNum] ?? { hole: holeNum, strokes: 0 };
+                        return { ...prev, [holeNum]: { ...existing, ...patch } };
+                      });
+                    return (
+                      <div className="scorecard">
+                        {c.holes.map((h) => {
+                          const sc = holeScores[h.hole];
+                          const toPar =
+                            sc && sc.strokes ? sc.strokes - h.par : null;
+                          return (
+                            <div className="sc-row" key={h.hole}>
+                              <span className="sc-hole">{h.hole}</span>
+                              <span className="sc-par">Par {h.par} · SI {h.si}</span>
+                              <input
+                                className="sc-strokes"
+                                inputMode="numeric"
+                                placeholder="–"
+                                value={sc?.strokes || ""}
+                                onChange={(e) =>
+                                  setHole(h.hole, { strokes: Number(e.target.value) || 0 })
+                                }
+                              />
+                              <input
+                                className="sc-putts"
+                                inputMode="numeric"
+                                placeholder="Putts"
+                                value={sc?.putts ?? ""}
+                                onChange={(e) =>
+                                  setHole(h.hole, {
+                                    putts: e.target.value === "" ? undefined : Number(e.target.value),
+                                  })
+                                }
+                              />
+                              <button
+                                type="button"
+                                className={`sc-gir ${sc?.gir ? "on" : ""}`}
+                                onClick={() => setHole(h.hole, { gir: !sc?.gir })}
+                              >
+                                GIR
+                              </button>
+                              {h.par >= 4 && (
+                                <button
+                                  type="button"
+                                  className={`sc-fw ${sc?.fairway ? "on" : ""}`}
+                                  onClick={() => setHole(h.hole, { fairway: !sc?.fairway })}
+                                >
+                                  FW
+                                </button>
+                              )}
+                              <span className="sc-topar">
+                                {toPar == null ? "" : toPar === 0 ? "E" : toPar > 0 ? `+${toPar}` : toPar}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                   <button
                     type="button"

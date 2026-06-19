@@ -2024,3 +2024,11 @@ textarea {
 }
 .tm-apply:active { transform: scale(0.96); }
 .tm-card.done { background: var(--bg); opacity: 0.85; }
+
+/* ── Ullersdorf-Scorecard (Loch-für-Loch) ── */
+.row-toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.scorecard { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.sc-row { display: grid; grid-template-columns: 28px 1fr 48px 56px auto auto 36px; gap: 6px; align-items: center; }
+.sc-strokes, .sc-putts { width: 100%; text-align: center; }
+.sc-gir.on, .sc-fw.on { background: var(--green, #2e7d32); color: #fff; }
+.sc-topar { text-align: right; font-variant-numeric: tabular-nums; }
