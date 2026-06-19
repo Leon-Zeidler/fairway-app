@@ -139,12 +139,18 @@ describe("roundInsightsFrom + buildSystemPrompt", () => {
   });
 
   it("überschreibt vorhandene Summenfelder NICHT, wenn die Session bereits strokes trägt", () => {
-    // Eine Session mit holes (nur 2 Löcher) und einem vorgefertigten strokes=90.
-    // Ohne Guard würde deriveRoundFields die echten Schläge neu berechnen und
-    // strokes=90 durch den Loch-abgeleiteten Wert ersetzen.
+    // Eine Session mit holes (nur 2 Löcher mit sehr niedrigen Schlägen) und einem
+    // vorgefertigten strokes=90, coursePar=73, holesPlayed=18.
+    // Ohne Guard würde deriveRoundFields die Schläge aus den 2 Löchern neu berechnen:
+    //   strokes = 2+2 = 4, coursePar = 4+3 = 7, holesPlayed = 2
+    //   → toPar = −3, per18(−3, 2) = −27  ← stark negativ
+    // Mit Guard bleiben die gespeicherten Felder:
+    //   strokes = 90, coursePar = 73, holesPlayed = 18
+    //   → toPar = +17, per18(+17, 18) = +17  ← stark positiv
+    // Das Vorzeichen von scoringToPar18 divergiert zwischen beiden Pfaden eindeutig.
     const shortHoles = [
-      { hole: 1, strokes: 4, gir: false },
-      { hole: 2, strokes: 5, gir: true },
+      { hole: 1, strokes: 2, gir: false }, // Hole 1 par=4 → würde strokes-Beitrag = 2 liefern
+      { hole: 2, strokes: 2, gir: true },  // Hole 2 par=3 → würde strokes-Beitrag = 2 liefern
     ];
     const sessionWithSummary: Session = {
       id: "test-summary",
@@ -155,7 +161,9 @@ describe("roundInsightsFrom + buildSystemPrompt", () => {
       createdAt: "2026-06-10T10:00:00Z",
       courseId: "ullersdorf",
       teeId: "schwarz",
-      strokes: 90, // bereits vorhandenes Summenfeld — darf NICHT überschrieben werden
+      strokes: 90,      // bereits vorhandenes Summenfeld — darf NICHT überschrieben werden
+      coursePar: 73,    // vollständige 18-Loch-Runde Ullersdorf
+      holesPlayed: 18,
       holes: shortHoles,
     } as Session;
 
@@ -166,14 +174,13 @@ describe("roundInsightsFrom + buildSystemPrompt", () => {
     const ri = roundInsightsFrom([sessionWithSummary, plainRound], [ULLERSDORF], NaN);
     expect(ri).toBeDefined();
 
-    // Das gleitende Fenster enthält beide Runden. Der scoringToPar18 wird aus dem
-    // Aggregat berechnet. Entscheidend: die Session mit strokes=90 muss unverändert
-    // ins Fenster gelangt sein. recentRoundsWindow filtert auf hasRoundStats — wir
-    // prüfen daher, dass windowSize 2 ist (beide Runden zählen) und die Berechnung
-    // nicht crasht. Eine Runde mit nur 2 Löchern und strokes=90 würde bei
-    // Neuberechnung strokes=9 ergeben — die Aggregation würde dann einen anderen
-    // scoringToPar18 liefern. Da wir die Session mit strokes=90 unberührt lassen,
-    // muss das Fenster beide Einträge enthalten.
+    // windowSize = 2: beide Runden zählen (beide haben hasRoundStats)
     expect(ri!.windowSize).toBe(2);
+
+    // Divergierender Wert: scoringToPar18 muss positiv/hoch sein (Wert aus strokes=90, Par=73 → +17).
+    // Ohne Guard würden die 2 Loch-Werte (4+3=9 Schläge, Par=7, holesPlayed=2)
+    // zu toPar=−3 führen → per18 = −27 → scoringToPar18 wäre negativ.
+    // Mit korrekt bewahrtem strokes=90 ergibt sich scoringToPar18 ≈ +17.5 → deutlich über 10.
+    expect(ri!.scoringToPar18).toBeGreaterThan(10);
   });
 });
