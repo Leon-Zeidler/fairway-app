@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Session, SessionType, SESSION_LABELS, HoleScore } from "@/lib/types";
+import { Focus, Profile, Session, SessionType, SESSION_LABELS, HoleScore } from "@/lib/types";
 import { getSessions, addSession, deleteSession, computeStreak } from "@/lib/storage";
-import { uid } from "@/lib/store";
-import { BALL_BUCKETS } from "@/lib/seed";
-import { isoLocal, mondayOf } from "@/lib/plan";
+import { useObject, uid } from "@/lib/store";
+import { BALL_BUCKETS, FOCUS, PROFILE } from "@/lib/seed";
+import { PLAN, isoLocal, mondayOf } from "@/lib/plan";
 import { roundStats, hasRoundStats, deriveRoundFields } from "@/lib/golf";
 import { COURSES, courseById } from "@/lib/courses";
+import { roundInsightsFrom, CoachAction, CoachResponse } from "@/lib/coach";
 import Icon from "@/app/components/Icon";
 import ScratchCard from "@/app/components/ScratchCard";
 
@@ -38,6 +39,14 @@ function roundMeta(s: Session): string {
 type Tab = "log" | "stats";
 
 export default function Journal() {
+  // Stores für KI-Autoanpassung
+  const focus = useObject<Focus>("focus", FOCUS);
+  const plan = useObject<Record<string, number[]>>("plan", PLAN);
+  const profile = useObject<Profile>("profile", PROFILE);
+  const [autoUndo, setAutoUndo] = useState<
+    { focus: Focus; plan: Record<string, number[]> } | null
+  >(null);
+
   const [tab, setTab] = useState<Tab>("log");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [date, setDate] = useState(todayIso());
@@ -96,6 +105,69 @@ export default function Journal() {
     setPenalties("");
   }
 
+  /** Ruft den Coach im Hintergrund auf und passt Fokus/Plan automatisch an. */
+  async function autoAdaptPlan(allSessions: Session[]) {
+    const insights = roundInsightsFrom(
+      allSessions,
+      COURSES,
+      parseFloat(profile.value.hcp)
+    );
+    if (!insights) return; // keine auswertbaren Runden → nichts zu tun
+
+    const context = {
+      focus: focus.value,
+      plan: plan.value,
+      profile: profile.value,
+      roundInsights: insights,
+      today: new Date().toLocaleDateString("de-DE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+    };
+
+    try {
+      const res = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              content:
+                "Ich habe gerade eine Runde gespeichert. Passe meinen Fokus und Wochenplan an die Runden-Auswertung an. Antworte knapp.",
+            },
+          ],
+          context,
+        }),
+      });
+      const data: CoachResponse = await res.json();
+      if (data.notConfigured || data.error) return; // kein Key / Fehler → still überspringen
+      const actions = (data.actions ?? []).filter(
+        (a): a is Extract<CoachAction, { type: "set_focus" | "set_plan" }> =>
+          a.type === "set_focus" || a.type === "set_plan"
+      );
+      if (!actions.length) return;
+
+      // Snapshot für Undo speichern, dann Aktionen anwenden
+      const snap = { focus: focus.value, plan: plan.value };
+      for (const a of actions) {
+        if (a.type === "set_focus") {
+          focus.set({
+            ...(a.title !== undefined ? { title: a.title } : {}),
+            ...(a.why !== undefined ? { why: a.why } : {}),
+            ...(a.cues !== undefined ? { cues: a.cues } : {}),
+          });
+        } else if (a.type === "set_plan") {
+          plan.set({ [a.activity]: a.days });
+        }
+      }
+      setAutoUndo(snap);
+    } catch {
+      // Offline oder Netzfehler → Runde bleibt gespeichert, kein Banner
+    }
+  }
+
   async function save() {
     setSaving(true);
     const noteParts = [
@@ -150,6 +222,11 @@ export default function Journal() {
       await addSession(s);
       resetForm();
       await refresh();
+      // Nur bei Platz-Runden: KI-Anpassung im Hintergrund anstoßen (kein await)
+      if (type === "course") {
+        const all = await getSessions();
+        void autoAdaptPlan(all);
+      }
     } catch (e) {
       alert("Speichern fehlgeschlagen: " + (e as Error).message);
     } finally {
@@ -238,6 +315,22 @@ export default function Journal() {
           Verlauf
         </button>
       </div>
+
+      {autoUndo && (
+        <div className="auto-undo">
+          <span>Plan an deine Runden angepasst.</span>
+          <button
+            type="button"
+            onClick={() => {
+              focus.replace(autoUndo.focus);
+              plan.replace(autoUndo.plan);
+              setAutoUndo(null);
+            }}
+          >
+            Rückgängig
+          </button>
+        </div>
+      )}
 
       <div className="container">
         {tab === "log" ? (

@@ -2032,3 +2032,7 @@ textarea {
 .sc-strokes, .sc-putts { width: 100%; text-align: center; }
 .sc-gir.on, .sc-fw.on { background: var(--green, #2e7d32); color: #fff; }
 .sc-topar { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Auto-Undo-Banner (KI-Plananpassung nach Runden-Speichern) ── */
+.auto-undo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; margin: 8px var(--pad); border-radius: 10px; background: var(--green-soft); font-size: 14px; }
+.auto-undo button { text-decoration: underline; background: none; border: none; font-family: inherit; font-size: inherit; cursor: pointer; color: var(--green-ink); padding: 0; }
