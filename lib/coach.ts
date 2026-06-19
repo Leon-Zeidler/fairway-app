@@ -146,6 +146,10 @@ export function roundInsightsFrom(
   const tf = topFocus(agg);
 
   // Handicap: Differentials aus allen Runden mit Loch-Daten (jüngste zuletzt).
+  // Hinweis (a): Die Handicap-Schätzung verwendet absichtlich ALLE Runden (WHS: beste der letzten 20),
+  // während Aggregat und topFocus nur das ~10-Runden-Rollfenster nutzen — diese Asymmetrie ist by design.
+  // Hinweis (b): Nur Runden mit Loch-für-Loch-Daten (holes) fließen ins Differential ein,
+  // weil Net-Double-Bogey (NDB) Par und Stroke-Index (SI) pro Loch benötigt (Zusammenfassung-Runden fallen heraus).
   const diffs: number[] = [];
   const dated = enriched
     .filter((s) => s.holes && s.holes.length && s.courseId)

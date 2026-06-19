@@ -60,7 +60,7 @@ export default function Journal() {
 
   // Ullersdorf-Scorecard (Loch-für-Loch)
   const [scorecard, setScorecard] = useState(false);
-  const [courseId, setCourseId] = useState("ullersdorf");
+  const [courseId] = useState("ullersdorf");
   const [teeId] = useState("schwarz");
   const [holeScores, setHoleScores] = useState<Record<number, HoleScore>>({});
 
@@ -221,14 +221,21 @@ export default function Journal() {
     try {
       await addSession(s);
       resetForm();
+    } catch (e) {
+      alert("Speichern fehlgeschlagen: " + (e as Error).message);
+      setSaving(false);
+      return;
+    }
+    // Runde ist gespeichert — Lesefehler dürfen keinen Save-Fehler-Banner auslösen
+    try {
       await refresh();
       // Nur bei Platz-Runden: KI-Anpassung im Hintergrund anstoßen (kein await)
       if (type === "course") {
         const all = await getSessions();
         void autoAdaptPlan(all);
       }
-    } catch (e) {
-      alert("Speichern fehlgeschlagen: " + (e as Error).message);
+    } catch {
+      // Lesefehler nach erfolgreichem Speichern still schlucken
     } finally {
       setSaving(false);
     }

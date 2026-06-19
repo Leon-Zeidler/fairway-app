@@ -57,6 +57,16 @@ describe("estimateHandicap", () => {
   it("keine Differentials → null", () => {
     expect(estimateHandicap([])).toBeNull();
   });
+  // Korrigierte Bänder: 7 Runden → beste 2 (war fälschlicherweise 3)
+  it("7 Differentials → beste 2 zählen, Schnitt = 1.5", () => {
+    // [1,2,3,4,5,6,7] → sort → beste 2 = {1,2} → (1+2)/2 = 1.5
+    expect(estimateHandicap([1, 2, 3, 4, 5, 6, 7])).toBeCloseTo(1.5, 5);
+  });
+  // Korrigiertes Band: 9 Runden → beste 4 (war fälschlicherweise 3)
+  it("9 Differentials → beste 4 zählen, Schnitt = 2.5", () => {
+    // [1,2,3,4,5,6,7,8,9] → sort → beste 4 = {1,2,3,4} → (1+2+3+4)/4 = 2.5
+    expect(estimateHandicap([1, 2, 3, 4, 5, 6, 7, 8, 9])).toBeCloseTo(2.5, 5);
+  });
 });
 
 describe("roundHandicap", () => {

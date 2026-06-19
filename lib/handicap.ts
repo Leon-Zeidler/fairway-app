@@ -68,10 +68,10 @@ function countBest(n: number): number {
   if (n >= 17) return 6;
   if (n >= 15) return 5;
   if (n >= 12) return 4;
-  if (n >= 9) return 3;
-  if (n >= 7) return 3;
-  if (n >= 5) return 2;
-  if (n >= 3) return 1;
+  if (n >= 9)  return 4; // korrigiert: war 3
+  if (n >= 7)  return 2; // korrigiert: war 3
+  if (n >= 5)  return 2;
+  if (n >= 3)  return 1;
   return 0; // < 3 Runden: noch keine belastbare Schätzung
 }
 
